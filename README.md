@@ -1,2 +1,5 @@
 # tigershark3
-v2 but moved from MongoDB to SQLITE3, and adding asset creation as well as show/seq/shot
+tigershark v2 but moved from MongoDB to SQLITE3,
+and adding Assets creation as well as Show/Seq/Shot
+
+
