@@ -1,7 +1,7 @@
 pub async fn create_assets_table(db_name: &str) -> Result<(), sqlx::Error> {
     let mut conn = sqlite::SqliteConnection::connect(db_name).await?;
-    // TO DO : use the result of _ct_assets_
-    let _ct_assets = sqlx::query(
+    // TO DO : use the result of _sqlquery
+    let _sqlquery = sqlx::query(
         r#"
             CREATE TABLE IF NOT EXISTS "assets" (
                 "asset_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -16,11 +16,12 @@ pub async fn create_assets_table(db_name: &str) -> Result<(), sqlx::Error> {
 
 pub async fn create_versions_table(db_name: &str) -> Result<(), sqlx::Error> {
     let mut conn = sqlite::SqliteConnection::connect(&db_name).await?;
-    // TO DO : use the result of _ct_assets_
-    let _ct_assets = sqlx::query(
+    // TO DO : use the result of _sqlquery 
+    let _sqlquery = sqlx::query(
         r#"
             CREATE TABLE IF NOT EXISTS "versions" (
-                "version"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                "version_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                "version"       INTEGER,
                 "source"	TEXT,
                 "datapath"	TEXT,
                 "depend"	TEXT,

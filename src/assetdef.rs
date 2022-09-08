@@ -3,24 +3,26 @@ use sqlx::Row;
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct Version {
+    pub asset_id: i64,
+    pub version_id: i64,
     pub version: i64,
     pub source: String,
     pub datapath: String,
     pub depend: String,
     pub approved: u8,
     pub status: u8,
-    pub asset_id: i64,
 }
 impl From<&SqliteRow> for Version {
     fn from(row: &SqliteRow) -> Version {
         Version {
+            asset_id: row.try_get("asset_id").unwrap_or(0),
+            version_id: row.try_get("asset_id").unwrap_or(0),
             version: row.try_get("version").unwrap_or(0_i64),
             source: row.try_get("source").unwrap_or("_".to_string()),
             datapath: row.try_get("datapath").unwrap_or("_".to_string()),
             depend: row.try_get("depend").unwrap_or("_".to_string()),
             approved: row.try_get("approved").unwrap_or(0),
             status: row.try_get("status").unwrap_or(0),
-            asset_id: row.try_get("asset_id").unwrap_or(0),
         }
     }
 }

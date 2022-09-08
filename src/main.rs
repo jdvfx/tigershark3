@@ -45,7 +45,7 @@ async fn main() {
                 }
             }
         }
-        Err(o) => cli_output = CliOutput::new("err", &format!("Error parsing args: {:?}", o)),
+        Err(e) => cli_output = CliOutput::new("err", &format!("Error parsing args: {:?}", e)),
     }
     exit_or_panic(cli_output);
 }
