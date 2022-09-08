@@ -3,7 +3,7 @@ use sqlx::Row;
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct Version {
-    pub id: i64,
+    pub version: i64,
     pub source: String,
     pub datapath: String,
     pub depend: String,
@@ -14,7 +14,7 @@ pub struct Version {
 impl From<&SqliteRow> for Version {
     fn from(row: &SqliteRow) -> Version {
         Version {
-            id: row.try_get("id").unwrap_or(0_i64),
+            version: row.try_get("version").unwrap_or(0_i64),
             source: row.try_get("source").unwrap_or("_".to_string()),
             datapath: row.try_get("datapath").unwrap_or("_".to_string()),
             depend: row.try_get("depend").unwrap_or("_".to_string()),
@@ -27,14 +27,16 @@ impl From<&SqliteRow> for Version {
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct Asset {
-    pub id: i64,
+    pub asset_id: i64,
     pub name: String,
+    pub location: String,
 }
 impl From<&SqliteRow> for Asset {
     fn from(row: &SqliteRow) -> Asset {
         Asset {
-            id: row.try_get("id").unwrap_or(0_i64),
+            asset_id: row.try_get("asset_id").unwrap_or(0_i64),
             name: row.try_get("name").unwrap_or("_".to_string()),
+            location: row.try_get("location").unwrap_or("_".to_string()),
         }
     }
 }
