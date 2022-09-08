@@ -9,4 +9,6 @@ edition = "2021"
 
 sqlx = { version = "0.6.1", default-features=false , features = [ "runtime-tokio-rustls", "macros", "sqlite"] }
 tokio = {version="1.20.1" , features=["full"]}
-
+clap = { version = "3.2.16", features = ["derive"] }
+serde = { version = "1.0.142", features = ["derive"]}
+serde_json = "1.0.83"
