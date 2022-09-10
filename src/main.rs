@@ -15,6 +15,33 @@ use parse_args::CommandType;
 
 #[tokio::main]
 async fn main() {
+    //
+    let initialize_tables = false;
+    if initialize_tables {
+        let db_name = "sqlite:/home/bunker/assets2.db";
+        let conn = sqlite::SqliteConnection::connect(&db_name).await;
+        match conn {
+            Ok(c) => {
+                let _a = utils::create_versions_table(c).await;
+                println!("OK : Versions table created");
+            }
+            Err(e) => {
+                println!("ERR");
+            }
+        }
+        let conn = sqlite::SqliteConnection::connect(&db_name).await;
+        match conn {
+            Ok(c) => {
+                let _a = utils::create_asset_table(c).await;
+                println!("OK : Assets table created");
+            }
+            Err(e) => {
+                println!("ERR");
+            }
+        }
+        panic!("Created Assets and Versions tables");
+    }
+
     let cli_output: CliOutput;
     // parse args
     let args = parse_args::get_args();
@@ -49,17 +76,3 @@ async fn main() {
     }
     exit_or_panic(cli_output);
 }
-
-// #[tokio::main]
-// async fn main() -> Result<(), sqlx::Error> {
-//     //
-//     let db_name = "sqlite:/home/bunker/assets2.db";
-//     //
-//     // create_assets_table(&db_name).await?;
-//     // create_versions_table(&db_name).await?;
-//     // insert_version(&db_name).await?;
-//     // insert_asset(&db_name, "my_new_asset").await?;
-//     find_asset_id(&db_name, "cone").await?;
-//     //
-//     Ok(())
-// }
