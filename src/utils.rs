@@ -4,8 +4,20 @@ use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use sqlx::SqliteConnection;
 
-pub async fn create(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "create")
+pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    let sql = sqlx::query(&format!(
+        "
+            INSERT INTO assets
+            ('name','location') VALUES ('{}','{}');
+        ",
+        json.name, json.location
+    ))
+    .execute(&mut connection)
+    .await;
+    match sql {
+        Ok(_) => CliOutput::new("ok", "Asset Created"),
+        Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
+    }
 }
 
 pub async fn update(connection: SqliteConnection, json: AssetJson) -> CliOutput {
@@ -33,7 +45,8 @@ pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {
         r#"
             CREATE TABLE IF NOT EXISTS "assets" (
                 "asset_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                "name"	TEXT
+                "name"	    TEXT,
+                "location"  TEXT
             );
         "#,
     )
