@@ -22,20 +22,51 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 }
 
 pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    // version
-    // source
-    // datapath
-    // depend
-    // approved
-    // status
-    // asset_id .
+
+
+    // this part needs some cleanup
+    // should use fetch_one() instead of fetch_all()
     //
+    //
+    //
+    //
+    let mut asset_id:i64 = json.asset_id;
+    // didn't pass asset_id, use name & location
+    if asset_id == 0_i64{
+        let sql = sqlx::query(&format!(
+            "
+                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
+            ",
+            na = json.name,
+            lo = json.location,
+        ))
+        .fetch_all(&mut connection)
+        .await;
+
+        match sql{
+            Ok(s) => {
+                for i in s.iter(){
+                    let x: Asset = i.into();
+                    asset_id = x.asset_id;
+                    println!("OK asset_id: {:?}",&asset_id);
+                }
+            },
+            Err(_) => {
+                return CliOutput::new("err", "asset ID not found, from name,location ");
+            }
+        }
+    }
+
+    //
+    //
+    println!(">>> asset_id {:?}",&asset_id);
+
 
     let sql = sqlx::query(&format!(
         "
             SELECT version FROM versions WHERE asset_id='{}';
         ",
-        json.asset_id,
+        &asset_id,
     ))
     .fetch_all(&mut connection)
     .await;
@@ -52,25 +83,28 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
                 .unwrap_or(0);
             println!(">>> last version <<< {:?}", last_version);
 
-            let sql = sqlx::query(&format!(
+
+            let q = format!(
                 "
                     INSERT INTO versions
                     ('asset_id','version','source','datapath','depend','approved','status')
                     VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}');
                 ",
-                as = json.asset_id,
+                as = &asset_id,
                 ve = last_version + 1_i64,
                 so = json.source,
                 da = json.datapath,
                 de = "",
                 ap = 0,
                 st = 0,
-            ))
+            );
+
+            let sql = sqlx::query(&q)
             .execute(&mut connection)
             .await;
             match sql {
                 Ok(_) => CliOutput::new("ok", "Asset Version Created"),
-                Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {:?}", e)),
+                Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {:?} {}", e, q)),
             }
         }
         Err(e) => CliOutput::new("err", "___err___"),
