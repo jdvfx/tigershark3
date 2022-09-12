@@ -23,15 +23,12 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 
 pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
 
-
     // this part needs some cleanup
     // should use fetch_one() instead of fetch_all()
     //
-    //
-    //
-    //
+    // if asset_id is missing, use name+location to get it instead
     let mut asset_id:i64 = json.asset_id;
-    // didn't pass asset_id, use name & location
+    //
     if asset_id == 0_i64{
         let sql = sqlx::query(&format!(
             "
@@ -48,7 +45,6 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
                 for i in s.iter(){
                     let x: Asset = i.into();
                     asset_id = x.asset_id;
-                    println!("OK asset_id: {:?}",&asset_id);
                 }
             },
             Err(_) => {
@@ -56,11 +52,6 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
             }
         }
     }
-
-    //
-    //
-    println!(">>> asset_id {:?}",&asset_id);
-
 
     let sql = sqlx::query(&format!(
         "
@@ -81,8 +72,6 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
                 .map(|r| r.version)
                 .max()
                 .unwrap_or(0);
-            println!(">>> last version <<< {:?}", last_version);
-
 
             let q = format!(
                 "
@@ -110,26 +99,6 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         Err(e) => CliOutput::new("err", "___err___"),
     }
 
-    //
-
-    // pub asset_id: i64,
-    // pub version_id: i64,
-    // pub version: i64,
-    // pub source: String,
-    // pub datapath: String,
-    // pub depend: String,
-    // pub approved: u8,
-    // pub status: u8,
-
-    // name location asset_id: box
-    // version - query first, then increment
-    // source
-    // datapath
-
-    // depend (option)
-
-    // approved: 0
-    // status: 0
 }
 
 pub async fn source(connection: SqliteConnection, json: AssetJson) -> CliOutput {
