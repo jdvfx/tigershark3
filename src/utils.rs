@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
 
+use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use sqlx::SqliteConnection;
@@ -20,8 +21,89 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn update(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "update")
+pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    // version
+    // source
+    // datapath
+    // depend
+    // approved
+    // status
+    // asset_id .
+    //
+
+    let sql = sqlx::query(&format!(
+        "
+            SELECT version FROM versions WHERE asset_id='{}';
+        ",
+        json.asset_id,
+    ))
+    .fetch_all(&mut connection)
+    .await;
+
+    match sql {
+        Ok(sql) => {
+            let last_version = sql
+                .iter()
+                .map(|r| r.into())
+                .collect::<Vec<Version>>()
+                .iter()
+                .map(|r| r.version)
+                .max()
+                .unwrap_or(0);
+            println!(">>> last version <<< {:?}", last_version);
+
+            // let v = sql.iter().map(|a| a.into());
+
+            //
+            // for i in sql.iter() {
+            //     let x: Version = i.into();
+            //     let version = x.version;
+            //     println!("{}", version);
+            // }
+            CliOutput::new("ok", "___ok___")
+        }
+        Err(e) => CliOutput::new("err", "___err___"),
+    }
+
+    //
+    // let sql = sqlx::query(&format!(
+    //     "
+    //         INSERT INTO versions
+    //         ('asset_id','source','datapath','depend','approved','status')
+    //         VALUES ('{as}','{so}','{da}','{de}','{ap}','{st}');
+    //     ",
+    //     as = json.asset_id,
+    //     so = json.source,
+    //     da = json.datapath,
+    //     de = "",
+    //     ap = 0,
+    //     st = 0,
+    // ))
+    // .execute(&mut connection)
+    // .await;
+    // match sql {
+    //     Ok(_) => CliOutput::new("ok", "Asset Created"),
+    //     Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
+    // }
+
+    // pub asset_id: i64,
+    // pub version_id: i64,
+    // pub version: i64,
+    // pub source: String,
+    // pub datapath: String,
+    // pub depend: String,
+    // pub approved: u8,
+    // pub status: u8,
+
+    // name location asset_id: box
+    // version - query first, then increment
+    // source
+    // datapath
+
+    // depend (option)
+
+    // approved: 0
+    // status: 0
 }
 
 pub async fn source(connection: SqliteConnection, json: AssetJson) -> CliOutput {
