@@ -52,39 +52,31 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
                 .unwrap_or(0);
             println!(">>> last version <<< {:?}", last_version);
 
-            // let v = sql.iter().map(|a| a.into());
-
-            //
-            // for i in sql.iter() {
-            //     let x: Version = i.into();
-            //     let version = x.version;
-            //     println!("{}", version);
-            // }
-            CliOutput::new("ok", "___ok___")
+            let sql = sqlx::query(&format!(
+                "
+                    INSERT INTO versions
+                    ('asset_id','version','source','datapath','depend','approved','status')
+                    VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}');
+                ",
+                as = json.asset_id,
+                ve = last_version + 1_i64,
+                so = json.source,
+                da = json.datapath,
+                de = "",
+                ap = 0,
+                st = 0,
+            ))
+            .execute(&mut connection)
+            .await;
+            match sql {
+                Ok(_) => CliOutput::new("ok", "Asset Version Created"),
+                Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {:?}", e)),
+            }
         }
         Err(e) => CliOutput::new("err", "___err___"),
     }
 
     //
-    // let sql = sqlx::query(&format!(
-    //     "
-    //         INSERT INTO versions
-    //         ('asset_id','source','datapath','depend','approved','status')
-    //         VALUES ('{as}','{so}','{da}','{de}','{ap}','{st}');
-    //     ",
-    //     as = json.asset_id,
-    //     so = json.source,
-    //     da = json.datapath,
-    //     de = "",
-    //     ap = 0,
-    //     st = 0,
-    // ))
-    // .execute(&mut connection)
-    // .await;
-    // match sql {
-    //     Ok(_) => CliOutput::new("ok", "Asset Created"),
-    //     Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
-    // }
 
     // pub asset_id: i64,
     // pub version_id: i64,
