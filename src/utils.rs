@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
-use sqlx::SqliteConnection;
+use sqlx::{Connection, SqliteConnection};
 
 pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
     let sql = sqlx::query(&format!(
@@ -24,14 +24,14 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn latest_version(mut connection: SqliteConnection, asset_id: i64) -> i64 {
+pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) -> i64 {
     let sql = sqlx::query(&format!(
         "
             SELECT version FROM versions WHERE asset_id='{}';
         ",
         &asset_id,
     ))
-    .fetch_all(&mut connection)
+    .fetch_all(connection)
     .await;
 
     let asset_id: i64 = match sql {
@@ -57,6 +57,9 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     // should use fetch_one() instead of fetch_all()
     //
     // if asset_id is missing, use name+location to get it instead
+    //
+    // let mut connection = con;
+    //
     let mut asset_id: i64 = json.asset_id;
     //
     if asset_id == 0_i64 {
@@ -83,26 +86,7 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         }
     }
 
-    // let last_version: i64 = latest_version(connection, asset_id).await;
-
-    let sql = sqlx::query(&format!(
-        "SELECT version FROM versions WHERE asset_id='{}';",
-        &asset_id,
-    ))
-    .fetch_all(&mut connection)
-    .await;
-
-    let last_version: i64 = match sql {
-        Ok(sql) => sql
-            .iter()
-            .map(|r| r.into())
-            .collect::<Vec<Version>>()
-            .iter()
-            .map(|r| r.version)
-            .max()
-            .unwrap_or(0),
-        Err(..) => 0_i64,
-    };
+    let last_version: i64 = latest_version(&mut connection, asset_id).await;
 
     let q = format!(
         "
