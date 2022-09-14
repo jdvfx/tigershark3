@@ -48,7 +48,7 @@ struct JsonOption {
     pub status: Option<u8>,
 }
 // the asset json that gets passed to the CRUD function
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AssetJson {
     pub asset_id: i64,
     pub name: String,

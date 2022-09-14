@@ -27,7 +27,7 @@ impl From<&SqliteRow> for Version {
     }
 }
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Asset {
     pub asset_id: i64,
     pub name: String,

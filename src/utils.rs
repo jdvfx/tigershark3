@@ -24,6 +24,42 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
+pub async fn get_asset_id(
+    connection: &mut SqliteConnection,
+    json: AssetJson,
+) -> Result<i64, CliOutput> {
+    let mut asset_id: i64 = json.asset_id;
+    //
+    if asset_id == 0_i64 {
+        let sql = sqlx::query(&format!(
+            "
+                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
+            ",
+            na = json.name,
+            lo = json.location,
+        ))
+        .fetch_all(connection)
+        .await;
+
+        match sql {
+            Ok(s) => {
+                for i in s.iter() {
+                    let x: Asset = i.into();
+                    asset_id = x.asset_id;
+                }
+                return Ok(asset_id);
+            }
+            Err(_) => {
+                return Err(CliOutput::new(
+                    "err",
+                    "asset ID not found, from name,location ",
+                ))
+            }
+        }
+    }
+    Ok(asset_id)
+}
+
 pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) -> i64 {
     let sql = sqlx::query(&format!(
         "
@@ -53,39 +89,14 @@ pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) ->
 }
 
 pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    // this part needs some cleanup
-    // should use fetch_one() instead of fetch_all()
     //
-    // if asset_id is missing, use name+location to get it instead
-    //
-    // let mut connection = con;
-    //
-    let mut asset_id: i64 = json.asset_id;
-    //
-    if asset_id == 0_i64 {
-        let sql = sqlx::query(&format!(
-            "
-                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
-            ",
-            na = json.name,
-            lo = json.location,
-        ))
-        .fetch_all(&mut connection)
-        .await;
-
-        match sql {
-            Ok(s) => {
-                for i in s.iter() {
-                    let x: Asset = i.into();
-                    asset_id = x.asset_id;
-                }
-            }
-            Err(_) => {
-                return CliOutput::new("err", "asset ID not found, from name,location ");
-            }
-        }
-    }
-
+    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
+    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
+    let asset_id: i64 = match asset_id_ {
+        Ok(a) => a,
+        Err(cli) => return cli,
+    };
+    // get last version
     let last_version: i64 = latest_version(&mut connection, asset_id).await;
 
     let q = format!(
@@ -121,8 +132,16 @@ pub async fn delete(connection: SqliteConnection, json: AssetJson) -> CliOutput 
     CliOutput::new("ok", "delete")
 }
 
-pub async fn latest(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "latest")
+pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
+    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
+    let asset_id: i64 = match asset_id_ {
+        Ok(a) => a,
+        Err(cli) => return cli,
+    };
+    // get last version
+    let last_version: i64 = latest_version(&mut connection, asset_id).await;
+    CliOutput::new("ok", &format!("latest : {:?}", last_version))
 }
 
 pub async fn approve(connection: SqliteConnection, json: AssetJson) -> CliOutput {
