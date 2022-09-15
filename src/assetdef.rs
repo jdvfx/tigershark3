@@ -1,7 +1,7 @@
 use sqlx::sqlite::SqliteRow;
 use sqlx::Row;
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Version {
     pub asset_id: i64,
     pub version_id: i64,

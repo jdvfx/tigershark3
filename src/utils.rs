@@ -124,8 +124,35 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn source(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "source")
+pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
+    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
+    let asset_id: i64 = match asset_id_ {
+        Ok(a) => a,
+        Err(cli) => return cli,
+    };
+    let q = format!(
+        "
+            SELECT source FROM versions WHERE asset_id='{as}' AND version='{ve}';
+        ",
+        as = &asset_id,
+        ve = json.version,
+    );
+
+    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+
+    match sql {
+        Ok(s) => {
+            for i in s.iter() {
+                let x: Version = i.into();
+                let source: String = x.source;
+                println!("{:?}", source);
+            }
+
+            CliOutput::new("ok", "source")
+        }
+        Err(e) => CliOutput::new("err", &format!("Source not found: {:?} {}", e, q)),
+    }
 }
 
 pub async fn delete(connection: SqliteConnection, json: AssetJson) -> CliOutput {
