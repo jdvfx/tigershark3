@@ -141,15 +141,18 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;
 
+    // let sql = sqlx::query_as(&q).fetch_one(&mut connection).await;
+
     match sql {
         Ok(s) => {
+            //
+            let mut source: String = "_".to_string();
             for i in s.iter() {
                 let x: Version = i.into();
-                let source: String = x.source;
-                println!("{:?}", source);
+                source = x.source;
             }
 
-            CliOutput::new("ok", "source")
+            CliOutput::new("ok", &format!("source : {}", source))
         }
         Err(e) => CliOutput::new("err", &format!("Source not found: {:?} {}", e, q)),
     }
