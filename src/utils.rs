@@ -174,8 +174,30 @@ pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     CliOutput::new("ok", &format!("latest : {:?}", last_version))
 }
 
-pub async fn approve(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "approve")
+pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
+    let asset_id: i64 = match asset_id_ {
+        Ok(a) => a,
+        Err(cli) => return cli,
+    };
+
+    let q = format!(
+        "
+            SELECT source FROM versions WHERE asset_id='{as}' AND version='{ve}';
+            UPDATE versions
+            SET approved = 1
+            WHERE asset_id = {as} AND version = {ve};
+        ",
+        as = &asset_id,
+        ve = json.version,
+    );
+
+    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+
+    match sql {
+        Ok(_) => CliOutput::new("ok", "version Approved"),
+        Err(e) => CliOutput::new("ok", &format!("Error, could not approve version:{:?}", e)),
+    }
 }
 
 pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {
