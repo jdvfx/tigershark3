@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
-
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -99,6 +97,10 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     // get last version
     let last_version: i64 = latest_version(&mut connection, asset_id).await;
 
+    // add creation date -  chrono::DateTime<Utc>
+    // add access date - last time the file got read (that can be updated every few days?)
+    // don't want to update access date every single time it's accessed - too much for DB
+
     let q = format!(
         "
             INSERT INTO versions
@@ -156,10 +158,7 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-
-
 pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
@@ -179,8 +178,11 @@ pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;
 
     match sql {
-        Ok(_) => CliOutput::new("ok","version marked for purge"),
-        Err(e) => CliOutput::new("ok", &format!("Error, could not mark asset for purge:{:?}", e)),
+        Ok(_) => CliOutput::new("ok", "version marked for purge"),
+        Err(e) => CliOutput::new(
+            "ok",
+            &format!("Error, could not mark asset for purge:{:?}", e),
+        ),
     }
 }
 
@@ -202,6 +204,13 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
         Ok(a) => a,
         Err(cli) => return cli,
     };
+
+    // TODO
+    // * approve all the dependencies
+    // * check the depend string
+    // * split string, get at list of versions_id
+    // * push queries into a container
+    // * execute all
 
     let q = format!(
         "
