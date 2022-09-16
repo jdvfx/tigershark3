@@ -111,7 +111,7 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         da = json.datapath,
         de = "",
         ap = 0,
-        st = 0,
+        st = 1,
     );
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
@@ -141,8 +141,6 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;
 
-    // let sql = sqlx::query_as(&q).fetch_one(&mut connection).await;
-
     match sql {
         Ok(s) => {
             //
@@ -158,8 +156,32 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn delete(connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    CliOutput::new("ok", "delete")
+
+
+pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+
+    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
+    let asset_id: i64 = match asset_id_ {
+        Ok(a) => a,
+        Err(cli) => return cli,
+    };
+
+    let q = format!(
+        "
+            UPDATE versions
+            SET status = 2
+            WHERE asset_id = {as} AND version = {ve};
+        ",
+        as = &asset_id,
+        ve = json.version,
+    );
+
+    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+
+    match sql {
+        Ok(_) => CliOutput::new("ok","version marked for purge"),
+        Err(e) => CliOutput::new("ok", &format!("Error, could not mark asset for purge:{:?}", e)),
+    }
 }
 
 pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
@@ -183,7 +205,6 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
 
     let q = format!(
         "
-            SELECT source FROM versions WHERE asset_id='{as}' AND version='{ve}';
             UPDATE versions
             SET approved = 1
             WHERE asset_id = {as} AND version = {ve};

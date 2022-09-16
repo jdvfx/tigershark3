@@ -1,6 +1,12 @@
 use sqlx::sqlite::SqliteRow;
 use sqlx::Row;
 
+// status
+// 0 : status not set (null)
+// 1 : online
+// 2 : purge
+// 3 : deleted
+
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Version {
     pub asset_id: i64,
