@@ -1,9 +1,7 @@
-#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
-
 use sqlx::sqlite;
 use sqlx::Connection;
 
-use crate::assetdef::Asset;
+// use crate::assetdef::Asset;
 mod assetdef;
 pub mod errors;
 pub mod utils;
@@ -26,7 +24,7 @@ async fn main() {
                 println!("OK : Versions table created");
             }
             Err(e) => {
-                println!("ERR");
+                println!("ERR {:?}", e);
             }
         }
         let conn = sqlite::SqliteConnection::connect(&db_name).await;
@@ -36,7 +34,7 @@ async fn main() {
                 println!("OK : Assets table created");
             }
             Err(e) => {
-                println!("ERR");
+                println!("ERR {:?}", e);
             }
         }
         panic!("Created Assets and Versions tables");

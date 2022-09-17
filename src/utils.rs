@@ -1,10 +1,7 @@
-use std::rc::Rc;
-use std::sync::Arc;
-
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
-use sqlx::{Connection, SqliteConnection};
+use sqlx::SqliteConnection;
 
 pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
     let sql = sqlx::query(&format!(
@@ -229,6 +226,10 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
         Err(e) => CliOutput::new("ok", &format!("Error, could not approve version:{:?}", e)),
     }
 }
+
+//////////////////////////////////////////////////////////////
+// -- used for tables initialization only -- 
+//////////////////////////////////////////////////////////////
 
 pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {
     let sql = sqlx::query(
