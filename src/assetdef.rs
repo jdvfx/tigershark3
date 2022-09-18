@@ -32,7 +32,21 @@ impl From<&SqliteRow> for Version {
         }
     }
 }
-
+impl Into<Version> for SqliteRow {
+    fn into(self) -> Version {
+        Version {
+            asset_id: self.try_get("asset_id").unwrap_or(0),
+            version_id: self.try_get("asset_id").unwrap_or(0),
+            version: self.try_get("version").unwrap_or(0_i64),
+            source: self.try_get("source").unwrap_or("_".to_string()),
+            datapath: self.try_get("datapath").unwrap_or("_".to_string()),
+            depend: self.try_get("depend").unwrap_or("_".to_string()),
+            approved: self.try_get("approved").unwrap_or(0),
+            status: self.try_get("status").unwrap_or(0),
+        }
+    }
+}
+// --------------------------------------------
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Asset {
     pub asset_id: i64,
@@ -48,7 +62,6 @@ impl From<&SqliteRow> for Asset {
         }
     }
 }
-
 impl Into<Asset> for SqliteRow {
     fn into(self) -> Asset {
         Asset {

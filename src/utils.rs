@@ -159,17 +159,12 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         ve = json.version,
     );
 
-    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+    let sql = sqlx::query(&q).fetch_one(&mut connection).await;
 
     match sql {
         Ok(s) => {
-            //
-            let mut source: String = "_".to_string();
-            for i in s.iter() {
-                let x: Version = i.into();
-                source = x.source;
-            }
-
+            let version: Version = s.into();
+            let source = version.source;
             CliOutput::new("ok", &format!("source : {}", source))
         }
         Err(e) => CliOutput::new("err", &format!("Source not found: {:?} {}", e, q)),
@@ -193,7 +188,7 @@ pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         ve = json.version,
     );
 
-    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+    let sql = sqlx::query(&q).execute(&mut connection).await;
 
     match sql {
         Ok(_) => CliOutput::new("ok", "version marked for purge"),
@@ -240,7 +235,7 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
         ve = json.version,
     );
 
-    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+    let sql = sqlx::query(&q).execute(&mut connection).await;
 
     match sql {
         Ok(_) => CliOutput::new("ok", "version Approved"),
@@ -253,7 +248,7 @@ async fn get_asset_id(
     connection: &mut SqliteConnection,
     json: AssetJson,
 ) -> Result<i64, CliOutput> {
-    let mut asset_id: i64 = json.asset_id;
+    let asset_id: i64 = json.asset_id;
     //
     if asset_id == 0_i64 {
         let sql = sqlx::query(&format!(
@@ -263,16 +258,13 @@ async fn get_asset_id(
             na = json.name,
             lo = json.location,
         ))
-        .fetch_all(connection)
+        .fetch_one(connection)
         .await;
 
         match sql {
             Ok(s) => {
-                for i in s.iter() {
-                    let x: Asset = i.into();
-                    asset_id = x.asset_id;
-                }
-                return Ok(asset_id);
+                let asset: Asset = s.into();
+                return Ok(asset.asset_id);
             }
             Err(_) => {
                 return Err(CliOutput::new(
