@@ -1,7 +1,6 @@
 use sqlx::sqlite;
 use sqlx::Connection;
 
-// use crate::assetdef::Asset;
 mod assetdef;
 pub mod errors;
 pub mod utils;
