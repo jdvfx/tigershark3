@@ -48,3 +48,13 @@ impl From<&SqliteRow> for Asset {
         }
     }
 }
+
+impl Into<Asset> for SqliteRow {
+    fn into(self) -> Asset {
+        Asset {
+            asset_id: self.try_get("asset_id").unwrap_or(0_i64),
+            name: self.try_get("name").unwrap_or("_".to_string()),
+            location: self.try_get("location").unwrap_or("_".to_string()),
+        }
+    }
+}

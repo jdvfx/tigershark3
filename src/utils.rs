@@ -4,84 +4,77 @@ use crate::parse_args::{Asset, AssetJson};
 use sqlx::SqliteConnection;
 
 pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    let sql = sqlx::query(&format!(
-        "
-            INSERT INTO assets
-            ('name','location') VALUES ('{}','{}');
-        ",
-        json.name, json.location
-    ))
-    .execute(&mut connection)
-    .await;
-    match sql {
-        Ok(_) => CliOutput::new("ok", "Asset Created"),
-        Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
-    }
-}
-
-pub async fn get_asset_id(
-    connection: &mut SqliteConnection,
-    json: AssetJson,
-) -> Result<i64, CliOutput> {
-    let mut asset_id: i64 = json.asset_id;
     //
-    if asset_id == 0_i64 {
-        let sql = sqlx::query(&format!(
+    let mut asset_id: i64 = 0;
+    // first, let's find out if the asset exists
+    if json.asset_id != 0 {
+        // looks like the asset exist
+        asset_id = json.asset_id;
+    } else {
+        let q = format!(
             "
-                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
+                SELECT * FROM assets
+                WHERE name='{na}' AND location='{lo}';
             ",
             na = json.name,
             lo = json.location,
-        ))
-        .fetch_all(connection)
-        .await;
+        );
 
-        match sql {
-            Ok(s) => {
-                for i in s.iter() {
-                    let x: Asset = i.into();
-                    asset_id = x.asset_id;
+        let sql = sqlx::query(&q).fetch_one(&mut connection).await;
+
+        if sql.is_err() {
+            // asset ID not found, create a new asset
+            println!("asset not in DB , create it");
+            let sql2 = sqlx::query(&format!(
+                "
+                    INSERT INTO assets
+                    ('name','location') VALUES ('{}','{}');
+                ",
+                json.name, json.location
+            ))
+            .execute(&mut connection)
+            .await;
+            match sql2 {
+                Ok(sql2) => {
+                    println!("asset_created !!!");
+                    println!("{:?}", sql2);
+
+                    // super cool but doesn't return the asset_id //
+                    //
+                    // TO DO : find the asset_id !!!
+                    //
                 }
-                return Ok(asset_id);
+                Err(e) => {
+                    return CliOutput::new("err", &format!("Error creating Asset : {:?}", e));
+                }
             }
-            Err(_) => {
-                return Err(CliOutput::new(
-                    "err",
-                    "asset ID not found, from name,location ",
-                ))
-            }
+        } else {
+            let asset: Asset = sql.unwrap().into();
+            asset_id = asset.asset_id;
+            println!("asset_id = {}", asset_id);
         }
     }
-    Ok(asset_id)
+
+    println!("> > > asset ID: {}", asset_id);
+
+    CliOutput::new("ok", "Asset Created")
 }
 
-pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) -> i64 {
-    let sql = sqlx::query(&format!(
-        "
-            SELECT version FROM versions WHERE asset_id='{}';
-        ",
-        &asset_id,
-    ))
-    .fetch_all(connection)
-    .await;
-
-    let asset_id: i64 = match sql {
-        Ok(sql) => {
-            let last_version = sql
-                .iter()
-                .map(|r| r.into())
-                .collect::<Vec<Version>>()
-                .iter()
-                .map(|r| r.version)
-                .max()
-                .unwrap_or(0);
-            last_version
-        }
-
-        Err(_) => 0_i64,
-    };
-    asset_id
-}
+// pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+//     let sql = sqlx::query(&format!(
+//         "
+//             INSERT INTO assets
+//             ('name','location') VALUES ('{}','{}');
+//         ",
+//         json.name, json.location
+//     ))
+//     .execute(&mut connection)
+//     .await;
+//     match sql {
+//         Ok(_) => CliOutput::new("ok", "Asset Created"),
+//         Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
+//     }
+// }
 
 pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
     //
@@ -121,6 +114,34 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
             &format!("Error creating Asset Version : {:?} {}", e, q),
         ),
     }
+}
+
+pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) -> i64 {
+    let sql = sqlx::query(&format!(
+        "
+            SELECT version FROM versions WHERE asset_id='{}';
+        ",
+        &asset_id,
+    ))
+    .fetch_all(connection)
+    .await;
+
+    let asset_id: i64 = match sql {
+        Ok(sql) => {
+            let last_version = sql
+                .iter()
+                .map(|r| r.into())
+                .collect::<Vec<Version>>()
+                .iter()
+                .map(|r| r.version)
+                .max()
+                .unwrap_or(0);
+            last_version
+        }
+
+        Err(_) => 0_i64,
+    };
+    asset_id
 }
 
 pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
@@ -227,8 +248,45 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
     }
 }
 
+// internal - get asset_id if name and location as not provided
+async fn get_asset_id(
+    connection: &mut SqliteConnection,
+    json: AssetJson,
+) -> Result<i64, CliOutput> {
+    let mut asset_id: i64 = json.asset_id;
+    //
+    if asset_id == 0_i64 {
+        let sql = sqlx::query(&format!(
+            "
+                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
+            ",
+            na = json.name,
+            lo = json.location,
+        ))
+        .fetch_all(connection)
+        .await;
+
+        match sql {
+            Ok(s) => {
+                for i in s.iter() {
+                    let x: Asset = i.into();
+                    asset_id = x.asset_id;
+                }
+                return Ok(asset_id);
+            }
+            Err(_) => {
+                return Err(CliOutput::new(
+                    "err",
+                    "asset ID not found, from name,location ",
+                ))
+            }
+        }
+    }
+    Ok(asset_id)
+}
+
 //////////////////////////////////////////////////////////////
-// -- used for tables initialization only -- 
+// -- used for tables initialization only --
 //////////////////////////////////////////////////////////////
 
 pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {

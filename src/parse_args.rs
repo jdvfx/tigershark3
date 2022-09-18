@@ -111,7 +111,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
     match args.command.as_str() {
-        "create" => match a_name && a_location {
+        "create" => match a_name && a_location || asset_id {
             true => Ok(Command {
                 command: CommandType::Create,
                 json: asset_unwrapped,
