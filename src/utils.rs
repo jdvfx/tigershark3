@@ -5,10 +5,9 @@ use sqlx::SqliteConnection;
 
 pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
     //
-    let mut asset_id: i64 = 0;
+    let asset_id: i64;
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
-        // looks like the asset exist
         asset_id = json.asset_id;
     } else {
         let q = format!(
@@ -24,7 +23,6 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 
         if sql.is_err() {
             // asset ID not found, create a new asset
-            println!("asset not in DB , create it");
             let sql2 = sqlx::query(&format!(
                 "
                     INSERT INTO assets
@@ -35,14 +33,29 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
             .execute(&mut connection)
             .await;
             match sql2 {
-                Ok(sql2) => {
-                    println!("asset_created !!!");
-                    println!("{:?}", sql2);
-
-                    // super cool but doesn't return the asset_id //
-                    //
-                    // TO DO : find the asset_id !!!
-                    //
+                Ok(_sql2) => {
+                    // new asset created
+                    // let's find out its asset_id
+                    let sql3 = sqlx::query(&format!(
+                        "
+                            SELECT * FROM assets
+                            WHERE name='{na}' AND location='{lo}'; 
+                        ",
+                        na = json.name,
+                        lo = json.location,
+                    ))
+                    .fetch_one(&mut connection)
+                    .await;
+                    match sql3 {
+                        Ok(s) => {
+                            // found the asset_id of the newly created asset
+                            let asset: Asset = s.into();
+                            asset_id = asset.asset_id;
+                        }
+                        Err(e) => {
+                            return CliOutput::new("err", &format!("Couldn't find ID: {:?}", e))
+                        }
+                    }
                 }
                 Err(e) => {
                     return CliOutput::new("err", &format!("Error creating Asset : {:?}", e));
@@ -51,7 +64,6 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         } else {
             let asset: Asset = sql.unwrap().into();
             asset_id = asset.asset_id;
-            println!("asset_id = {}", asset_id);
         }
     }
 
