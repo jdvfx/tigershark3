@@ -13,39 +13,13 @@ use parse_args::CommandType;
 #[tokio::main]
 async fn main() {
     //
-    let initialize_tables = false;
-    if initialize_tables {
-        let db_name = "sqlite:/home/bunker/assets2.db";
-        let conn = sqlite::SqliteConnection::connect(&db_name).await;
-        match conn {
-            Ok(c) => {
-                let _a = utils::create_versions_table(c).await;
-                println!("OK : Versions table created");
-            }
-            Err(e) => {
-                println!("ERR {:?}", e);
-            }
-        }
-        let conn = sqlite::SqliteConnection::connect(&db_name).await;
-        match conn {
-            Ok(c) => {
-                let _a = utils::create_asset_table(c).await;
-                println!("OK : Assets table created");
-            }
-            Err(e) => {
-                println!("ERR {:?}", e);
-            }
-        }
-        panic!("Created Assets and Versions tables");
-    }
-
+    let db_name = "sqlite:/home/bunker/assets3.db";
     let cli_output: CliOutput;
     // parse args
     let args = parse_args::get_args();
     match args {
         Ok(args) => {
             //
-            let db_name = "sqlite:/home/bunker/assets2.db";
             let conn = sqlite::SqliteConnection::connect(&db_name).await;
             // connect to db, return a connection
             match conn {
@@ -61,9 +35,11 @@ async fn main() {
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,
                         CommandType::Approve => utils::approve(conn, json).await,
+                        CommandType::Initialize => utils::initialize(conn).await,
                     };
                 }
                 Err(e) => {
+                    // TODO : create database if it doesn't exist
                     cli_output =
                         CliOutput::new("err", &format!("Error with the connection: {:?}", e));
                 }

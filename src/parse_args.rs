@@ -12,6 +12,7 @@ pub enum CommandType {
     Delete,
     Latest,
     Approve,
+    Initialize,
 }
 
 #[derive(Debug)]
@@ -111,6 +112,10 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
     match args.command.as_str() {
+        "initialize" => Ok(Command {
+            command: CommandType::Initialize,
+            json: asset_unwrapped, // dummy json that isn't used for the initialize function
+        }),
         "create" => match a_name && a_location || asset_id {
             true => Ok(Command {
                 command: CommandType::Create,

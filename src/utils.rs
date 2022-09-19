@@ -1,6 +1,7 @@
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
+use sqlx::sqlite::*;
 use sqlx::SqliteConnection;
 
 pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
@@ -293,7 +294,28 @@ async fn get_asset_id(
 // -- used for tables initialization only --
 //////////////////////////////////////////////////////////////
 
-pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {
+// let conn = sqlite::SqliteConnection::connect(&db_name).await;
+// pub async fn initialize(&db_name: &str) -> CliOutput {
+// pub async fn initialize(&db_name: &str) -> CliOutput {
+
+pub async fn initialize(mut connection: SqliteConnection) -> CliOutput {
+    // if !sqlx::Sqlite::database_exists(&db_name).await {
+    // sqlx::Sqlite::create_database(&db_name).await;
+    // }
+
+    // let sql = sqlx::query(&format!(
+    //     "
+    //         CREATE DATABASE IF NOT EXISTS '{}';
+    //         ",
+    //     &db_name
+    // ))
+    // .execute()
+    // .await;
+    // match sql {
+    //     Ok(..) => CliOutput::new("ok", "database initialized"),
+    //     Err(e) => CliOutput::new("err", &format!("error initializing database {:?}", e)),
+    // }
+    //
     let sql = sqlx::query(
         r#"
             CREATE TABLE IF NOT EXISTS "assets" (
@@ -301,18 +323,6 @@ pub async fn create_asset_table(mut connection: SqliteConnection) -> CliOutput {
                 "name"	    TEXT,
                 "location"  TEXT
             );
-        "#,
-    )
-    .execute(&mut connection)
-    .await;
-    match sql {
-        Ok(_) => CliOutput::new("ok", "Asset table created"),
-        Err(e) => CliOutput::new("ok", &format!("Error creating Asset table :{:?}", e)),
-    }
-}
-pub async fn create_versions_table(mut connection: SqliteConnection) -> CliOutput {
-    let sql = sqlx::query(
-        r#"
             CREATE TABLE IF NOT EXISTS "versions" (
                 "version_id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 "version"       INTEGER,
@@ -329,7 +339,13 @@ pub async fn create_versions_table(mut connection: SqliteConnection) -> CliOutpu
     .execute(&mut connection)
     .await;
     match sql {
-        Ok(_) => CliOutput::new("ok", "Versions table created"),
-        Err(e) => CliOutput::new("ok", &format!("Error creating Versions table :{:?}", e)),
+        Ok(_) => CliOutput::new("ok", "'assets' and 'versions' tables created"),
+        Err(e) => {
+            return CliOutput::new(
+                "ok",
+                &format!("Error creating 'assets' and 'versions' tables :{:?}", e),
+            )
+        }
     }
+    // Ok(_) => CliOutput::new("ok", "'assets' and 'versions' tables created"),
 }
