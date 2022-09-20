@@ -1,16 +1,17 @@
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
-use sqlx::sqlite::*;
 use sqlx::SqliteConnection;
 
-pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    //
-    let asset_id: i64;
+pub async fn insert(mut connection: SqliteConnection, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
-        asset_id = json.asset_id;
+        // asset exist, let's up-version then
+        if !(json.source.is_empty() || json.datapath.is_empty()) {
+            update(connection, json).await;
+        }
     } else {
+        // asset_id doesn't exist, use name+location
         let q = format!(
             "
                 SELECT * FROM assets
@@ -21,7 +22,6 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         );
 
         let sql = sqlx::query(&q).fetch_one(&mut connection).await;
-
         if sql.is_err() {
             // asset ID not found, create a new asset
             let sql2 = sqlx::query(&format!(
@@ -51,7 +51,10 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
                         Ok(s) => {
                             // found the asset_id of the newly created asset
                             let asset: Asset = s.into();
-                            asset_id = asset.asset_id;
+                            json.asset_id = asset.asset_id;
+                            if !(json.source.is_empty() || json.datapath.is_empty()) {
+                                update(connection, json).await;
+                            }
                         }
                         Err(e) => {
                             return CliOutput::new("err", &format!("Couldn't find ID: {:?}", e))
@@ -64,41 +67,18 @@ pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOut
             }
         } else {
             let asset: Asset = sql.unwrap().into();
-            asset_id = asset.asset_id;
+            json.asset_id = asset.asset_id;
+
+            if !(json.source.is_empty() || json.datapath.is_empty()) {
+                update(connection, json).await;
+            }
         }
     }
-
-    println!("> > > asset ID: {}", asset_id);
-
     CliOutput::new("ok", "Asset Created")
 }
-
-// pub async fn create(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-//     let sql = sqlx::query(&format!(
-//         "
-//             INSERT INTO assets
-//             ('name','location') VALUES ('{}','{}');
-//         ",
-//         json.name, json.location
-//     ))
-//     .execute(&mut connection)
-//     .await;
-//     match sql {
-//         Ok(_) => CliOutput::new("ok", "Asset Created"),
-//         Err(e) => CliOutput::new("err", &format!("Error creating Asset : {:?}", e)),
-//     }
-// }
-
 pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
-    //
-    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
-    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
-    let asset_id: i64 = match asset_id_ {
-        Ok(a) => a,
-        Err(cli) => return cli,
-    };
     // get last version
-    let last_version: i64 = latest_version(&mut connection, asset_id).await;
+    let last_version: i64 = latest_version(&mut connection, json.asset_id).await;
 
     // add creation date -  chrono::DateTime<Utc>
     // add access date - last time the file got read (that can be updated every few days?)
@@ -110,11 +90,11 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
             ('asset_id','version','source','datapath','depend','approved','status')
             VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}');
         ",
-        as = &asset_id,
+        as = json.asset_id,
         ve = last_version + 1_i64,
         so = json.source,
         da = json.datapath,
-        de = "",
+        de = json.depend,
         ap = 0,
         st = 1,
     );
@@ -299,6 +279,12 @@ async fn get_asset_id(
 // pub async fn initialize(&db_name: &str) -> CliOutput {
 
 pub async fn initialize(mut connection: SqliteConnection) -> CliOutput {
+    //
+    //
+    // >>>> TO DO <<<<
+    // create database if it doesn't exist
+    //
+    //
     // if !sqlx::Sqlite::database_exists(&db_name).await {
     // sqlx::Sqlite::create_database(&db_name).await;
     // }
@@ -347,5 +333,4 @@ pub async fn initialize(mut connection: SqliteConnection) -> CliOutput {
             )
         }
     }
-    // Ok(_) => CliOutput::new("ok", "'assets' and 'versions' tables created"),
 }

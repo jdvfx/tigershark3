@@ -13,7 +13,7 @@ use parse_args::CommandType;
 #[tokio::main]
 async fn main() {
     //
-    let db_name = "sqlite:/home/bunker/assets3.db";
+    let db_name = "sqlite:/home/bunker/assets2.db";
     let cli_output: CliOutput;
     // parse args
     let args = parse_args::get_args();
@@ -29,8 +29,7 @@ async fn main() {
                     // Get command (eg: -c create )
                     // Execute one of the commands
                     cli_output = match args.command {
-                        CommandType::Create => utils::create(conn, json).await,
-                        CommandType::Update => utils::update(conn, json).await,
+                        CommandType::Insert => utils::insert(conn, json).await,
                         CommandType::Source => utils::source(conn, json).await,
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,

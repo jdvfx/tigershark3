@@ -6,8 +6,7 @@ use crate::errors::CliOutput;
 
 #[derive(Debug)]
 pub enum CommandType {
-    Create,
-    Update,
+    Insert,
     Source,
     Delete,
     Latest,
@@ -100,11 +99,12 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // to check if json values are present for the current command
     let a_name = asset.name.is_some();
     let a_location = asset.location.is_some();
-    let a_source = asset.source.is_some();
-    let a_datapath = asset.datapath.is_some();
-    let a_version = asset.version.is_some();
-    // let a_depend = asset.depend.is_some();
     let asset_id = asset.asset_id.is_some();
+    let a_version = asset.version.is_some();
+
+    // let a_source = asset.source.is_some();
+    // let a_datapath = asset.datapath.is_some();
+    // let a_depend = asset.depend.is_some();
 
     // unpack JsonOption into JsonString
     let asset_unwrapped: AssetJson = json_unwrap_or(asset);
@@ -116,19 +116,14 @@ pub fn get_args() -> Result<Command, CliOutput> {
             command: CommandType::Initialize,
             json: asset_unwrapped, // dummy json that isn't used for the initialize function
         }),
-        "create" => match a_name && a_location || asset_id {
+        "insert" => match a_name && a_location || asset_id {
+            // source and datapath are optional => update asset
+            // otherwize, just create a new asset if needed
             true => Ok(Command {
-                command: CommandType::Create,
+                command: CommandType::Insert,
                 json: asset_unwrapped,
             }),
             _ => Err(CliOutput::new("err", "create : Asset missing some Keys")),
-        },
-        "update" => match (a_name && a_location || asset_id) && a_source && a_datapath {
-            true => Ok(Command {
-                command: CommandType::Update,
-                json: asset_unwrapped,
-            }),
-            _ => Err(CliOutput::new("err", "update : Asset missing some Keys")),
         },
         "source" => match (a_name && a_location || asset_id) && a_version {
             true => Ok(Command {
