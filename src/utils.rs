@@ -92,15 +92,14 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     // get last version
     let last_version: i64 = latest_version(&mut connection, json.asset_id).await;
 
-    // add creation date -  chrono::DateTime<Utc>
     // add access date - last time the file got read (that can be updated every few days?)
     // don't want to update access date every single time it's accessed - too much for DB
 
     let q = format!(
         "
             INSERT INTO versions
-            ('asset_id','version','source','datapath','depend','approved','status','creationtime')
-            VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}');
+            ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
+            VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}','{ct}');
         ",
         as = json.asset_id,
         ve = last_version + 1_i64,

@@ -17,7 +17,8 @@ pub struct Version {
     pub depend: String,
     pub approved: u8,
     pub status: u8,
-    pub creationtime: String,
+    pub ctime: String,
+    pub atime: String,
 }
 impl From<&SqliteRow> for Version {
     fn from(row: &SqliteRow) -> Version {
@@ -30,7 +31,8 @@ impl From<&SqliteRow> for Version {
             depend: row.try_get("depend").unwrap_or("_".to_string()),
             approved: row.try_get("approved").unwrap_or(0),
             status: row.try_get("status").unwrap_or(0),
-            creationtime:row.try_get("creationtime").unwrap_or("_".to_string()),
+            ctime:row.try_get("ctime").unwrap_or("_".to_string()),
+            atime:row.try_get("atime").unwrap_or("_".to_string()),
         }
     }
 }
@@ -45,7 +47,8 @@ impl Into<Version> for SqliteRow {
             depend: self.try_get("depend").unwrap_or("_".to_string()),
             approved: self.try_get("approved").unwrap_or(0),
             status: self.try_get("status").unwrap_or(0),
-            creationtime:self.try_get("creationtime").unwrap_or("_".to_string()),
+            ctime:self.try_get("ctime").unwrap_or("_".to_string()),
+            atime:self.try_get("atime").unwrap_or("_".to_string()),
         }
     }
 }

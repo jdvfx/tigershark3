@@ -1,4 +1,4 @@
-../target/debug/tigershark3 -c update -a '{
+../target/debug/tigershark3 -c insert -a '{
 "name":"Ball",
 "location":"/location/ball",
 "source":"/source/ball_new3",
