@@ -1,7 +1,19 @@
+// #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
+//
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
+use chrono::prelude::*;
 use sqlx::SqliteConnection;
+
+fn now() -> String {
+    let local: DateTime<Local> = Local::now();
+    let d = local.date();
+    let t = local.time();
+    let dt = d.and_time(t);
+    let now = dt.unwrap().format("%Y-%m-%d %H:%M:%S").to_string();
+    now
+}
 
 pub async fn insert(mut connection: SqliteConnection, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
@@ -87,8 +99,8 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     let q = format!(
         "
             INSERT INTO versions
-            ('asset_id','version','source','datapath','depend','approved','status')
-            VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}');
+            ('asset_id','version','source','datapath','depend','approved','status','creationtime')
+            VALUES ('{as}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}');
         ",
         as = json.asset_id,
         ve = last_version + 1_i64,
@@ -97,6 +109,7 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
         de = json.depend,
         ap = 0,
         st = 1,
+        ct = now(),
     );
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
@@ -317,6 +330,7 @@ pub async fn initialize(mut connection: SqliteConnection) -> CliOutput {
                 "depend"	TEXT,
                 "approved"	INTEGER,
                 "status"	INTEGER,
+                "creationtime"  TEXT,
                 "asset_id"	INTEGER NOT NULL,
                 FOREIGN KEY("asset_id") REFERENCES "assets"("asset_id")
             );
