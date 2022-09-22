@@ -1,11 +1,13 @@
-// #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
+#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
 //
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
+use sqlx::Pool;
 use sqlx::SqliteConnection;
 
+//
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
     let d = local.date();
@@ -217,11 +219,35 @@ pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOut
 }
 
 pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+    // asset_id is cool but version_id is what we're after really
+    // TO DO : find the version_id
+
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
         Err(cli) => return cli,
     };
+
+    let q = format!(
+        "
+            SELECT depend FROM versions WHERE asset_id='{as}' AND version='{ve}';
+        ",
+        as = &asset_id,
+        ve = json.version,
+    );
+
+    let sql = sqlx::query(&q).fetch_one(&mut connection).await;
+    let mut depend = "".to_string();
+    if sql.is_ok() {
+        let version: Version = sql.unwrap().into();
+        depend = version.depend;
+    }
+    println!(">>> DEPEND >>> {:?}", depend);
+
+    let dep: Vec<&str> = depend.split(",").collect();
+    for i in dep {
+        println!("> > {:?}", i);
+    }
 
     // TODO
     // * approve all the dependencies
@@ -229,6 +255,31 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
     // * split string, get at list of versions_id
     // * push queries into a container
     // * execute all
+
+    // let db_name = "sqlite:/home/bunker/assets2.db";
+    // let pool = sqlx::SqlitePool::begin
+    // Pool::connect(&db_name);
+
+    // sqlx::Pool<sqlx::Sqlite> = Pool::connect(&db_name).await;
+    // let pool: sqlx::Pool<sqlx::MySql> =
+    //        futures::executor::block_on(crate::db::open_mariadb_pool()).unwrap();
+    //    use sqlx::Acquire;
+    //    let mut conn = pool.acquire().await.unwrap();
+    //    let mut tx = conn.begin().await?;
+    //
+    //    sqlx::query("INSERT INTO _sqlx_users_1922 (id) VALUES (@p1)")
+    //        .bind(10_i32)
+    //        .execute(&mut tx)
+    //        .await?;
+    //
+    //    tx.commit().await?;
+
+    // sqlx::query("INSERT INTO _sqlx_users_1922 (id) VALUES (@p1)")
+    //     .bind(10_i32)
+    //     .execute(&mut tx)
+    //     .await?;
+    //
+    // tx.commit().await?;
 
     let q = format!(
         "

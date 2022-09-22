@@ -101,6 +101,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let a_location = asset.location.is_some();
     let asset_id = asset.asset_id.is_some();
     let a_version = asset.version.is_some();
+    let a_version_id = asset.version_id.is_some();
 
     // let a_source = asset.source.is_some();
     // let a_datapath = asset.datapath.is_some();
@@ -116,7 +117,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             command: CommandType::Initialize,
             json: asset_unwrapped, // dummy json that isn't used for the initialize function
         }),
-        "insert" => match a_name && a_location || asset_id {
+        "insert" => match a_name && a_location || asset_id || a_version_id {
             // source and datapath are optional => update asset
             // otherwize, just create a new asset if needed
             true => Ok(Command {
@@ -125,14 +126,14 @@ pub fn get_args() -> Result<Command, CliOutput> {
             }),
             _ => Err(CliOutput::new("err", "create : Asset missing some Keys")),
         },
-        "source" => match (a_name && a_location || asset_id) && a_version {
+        "source" => match (a_name && a_location || asset_id) && a_version || a_version_id {
             true => Ok(Command {
                 command: CommandType::Source,
                 json: asset_unwrapped,
             }),
             _ => Err(CliOutput::new("err", "source : Asset missing some Keys")),
         },
-        "delete" => match (a_name && a_location || asset_id) && a_version {
+        "delete" => match (a_name && a_location || asset_id) && a_version || a_version_id {
             true => Ok(Command {
                 command: CommandType::Delete,
                 json: asset_unwrapped,
@@ -146,7 +147,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             }),
             _ => Err(CliOutput::new("err", "latest : Asset missing some Keys")),
         },
-        "approve" => match (a_name && a_location || asset_id) && a_version {
+        "approve" => match (a_name && a_location || asset_id) && a_version || a_version_id {
             true => Ok(Command {
                 command: CommandType::Approve,
                 json: asset_unwrapped,
