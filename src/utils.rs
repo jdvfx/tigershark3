@@ -4,6 +4,7 @@ use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
+use sqlx::Acquire;
 use sqlx::Pool;
 use sqlx::Sqlite;
 // use sqlx::PoolConnection;
@@ -229,6 +230,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
         Ok(a) => a,
         Err(cli) => return cli,
     };
+    println!(">>>> {:?}", &asset_id);
 
     let q = format!(
         "
@@ -242,14 +244,35 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
     let mut depend = "".to_string();
     if sql.is_ok() {
         let version: Version = sql.unwrap().into();
+        println!(". . . version : {:?}", &version);
         depend = version.depend;
     }
     println!(">>> DEPEND >>> {:?}", depend);
 
-    let dep: Vec<&str> = depend.split(",").collect();
-    for i in dep {
-        println!("> > {:?}", i);
+    let version_id_depends: Vec<&str> = depend.split(",").collect();
+
+    // TODO : remove this nasty unwrap
+    // oh shit! unwraps everywhere...
+    //
+    let conn = connection.acquire().await.unwrap();
+    let mut tx = conn.begin().await.unwrap();
+
+    for version_id in version_id_depends {
+        println!("--- version_id {}", version_id);
+        sqlx::query(&format!(
+            "
+                UPDATE versions
+                SET approved = 1
+                WHERE version_id = {};
+            ",
+            version_id
+        ))
+        .execute(&mut tx)
+        .await
+        .unwrap();
     }
+
+    tx.commit().await.unwrap();
 
     // TODO
     // * approve all the dependencies
