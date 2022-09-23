@@ -1,5 +1,8 @@
-use sqlx::sqlite;
-use sqlx::Connection;
+#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
+
+// use sqlx::sqlite;
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::{Acquire, Connection};
 
 mod assetdef;
 pub mod errors;
@@ -20,7 +23,11 @@ async fn main() {
     match args {
         Ok(args) => {
             //
-            let conn = sqlite::SqliteConnection::connect(&db_name).await;
+            // not sure about the syntax there... why using SqlitePoolOptions twice, that's dumb.
+            let options = SqlitePoolOptions::new().max_connections(5);
+            let pool = SqlitePoolOptions::connect(options, db_name).await.unwrap();
+            let conn = pool.acquire().await;
+            // let conn = sqlite::SqliteConnection::connect(&db_name).await;
             // connect to db, return a connection
             match conn {
                 Ok(conn) => {

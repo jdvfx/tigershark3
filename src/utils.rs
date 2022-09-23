@@ -5,8 +5,10 @@ use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::Pool;
-use sqlx::SqliteConnection;
-
+use sqlx::Sqlite;
+// use sqlx::PoolConnection;
+use sqlx::pool::PoolConnection;
+use sqlx::sqlite::SqlitePoolOptions;
 //
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
@@ -17,7 +19,7 @@ fn now() -> String {
     now
 }
 
-pub async fn insert(mut connection: SqliteConnection, mut json: AssetJson) -> CliOutput {
+pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
         // asset exist, let's up-version then
@@ -90,7 +92,7 @@ pub async fn insert(mut connection: SqliteConnection, mut json: AssetJson) -> Cl
     }
     CliOutput::new("ok", "Asset Created")
 }
-pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+pub async fn update(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get last version
     let last_version: i64 = latest_version(&mut connection, json.asset_id).await;
 
@@ -123,7 +125,7 @@ pub async fn update(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) -> i64 {
+pub async fn latest_version(connection: &mut PoolConnection<Sqlite>, asset_id: i64) -> i64 {
     let sql = sqlx::query(&format!(
         "
             SELECT version FROM versions WHERE asset_id='{}';
@@ -151,7 +153,7 @@ pub async fn latest_version(connection: &mut SqliteConnection, asset_id: i64) ->
     asset_id
 }
 
-pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get asset_id :  if json.asset.id is missing, use name and location to quiery it
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
@@ -178,7 +180,7 @@ pub async fn source(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+pub async fn delete(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
@@ -206,7 +208,7 @@ pub async fn delete(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     }
 }
 
-pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get asset_id :  if json.asset.id is missing, use name and location to quiery it
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
@@ -218,7 +220,7 @@ pub async fn latest(mut connection: SqliteConnection, json: AssetJson) -> CliOut
     CliOutput::new("ok", &format!("latest : {:?}", last_version))
 }
 
-pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOutput {
+pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // asset_id is cool but version_id is what we're after really
     // TO DO : find the version_id
 
@@ -301,7 +303,7 @@ pub async fn approve(mut connection: SqliteConnection, json: AssetJson) -> CliOu
 
 // internal - get asset_id if name and location as not provided
 async fn get_asset_id(
-    connection: &mut SqliteConnection,
+    connection: &mut PoolConnection<Sqlite>,
     json: AssetJson,
 ) -> Result<i64, CliOutput> {
     let asset_id: i64 = json.asset_id;
@@ -337,11 +339,11 @@ async fn get_asset_id(
 // -- used for tables initialization only --
 //////////////////////////////////////////////////////////////
 
-// let conn = sqlite::SqliteConnection::connect(&db_name).await;
+// let conn = sqlite::PoolConnection::connect(&db_name).await;
 // pub async fn initialize(&db_name: &str) -> CliOutput {
 // pub async fn initialize(&db_name: &str) -> CliOutput {
 
-pub async fn initialize(mut connection: SqliteConnection) -> CliOutput {
+pub async fn initialize(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     //
     //
     // >>>> TO DO <<<<
