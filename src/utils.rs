@@ -335,6 +335,8 @@ async fn get_asset_id(
 pub async fn test(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get the version_id
     let q = &format!(
+
+        // this is broken, the version_id is WRONNNNNNGGGG!! 100% failure guaranteed
         "
             SELECT versions.*
             FROM assets, versions
