@@ -221,17 +221,38 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
     CliOutput::new("ok", &format!("latest : {:?}", last_version))
 }
 
-pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    // asset_id is cool but version_id is what we're after really
-    // TO DO : find the version_id
+pub async fn approve(connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+    // get the version_id
+
+    let version_id = get_version_id(&mut connection, json).await;
+    println!("version id : {:?}", &version_id);
 
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
         Err(cli) => return cli,
     };
-    println!(">>>> {:?}", &asset_id);
+    // approve the current version
+    let q = format!(
+        "
+            UPDATE versions
+            SET approved = 1
+            WHERE asset_id = {as} AND version = {ve};
+        ",
+        as = &asset_id,
+        ve = json.version,
+    );
 
+    let sql = sqlx::query(&q).execute(&mut connection).await;
+    match sql {
+        Ok(_) => CliOutput::new("ok", "version Approved"),
+        Err(e) => CliOutput::new("ok", &format!("Error, could not approve version:{:?}", e)),
+    }
+
+    // TO DO : approve dependencies as separate function
+    // async fn approve_dependencies(connection: &mut PoolConnection<Sqlite>, depend: Vec<String>) {}
+    //
+    // approve dependencies
     let q = format!(
         "
             SELECT depend FROM versions WHERE asset_id='{as}' AND version='{ve}';
@@ -274,56 +295,8 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
 
     tx.commit().await.unwrap();
 
-    // TODO
-    // * approve all the dependencies
-    // * check the depend string
-    // * split string, get at list of versions_id
-    // * push queries into a container
-    // * execute all
-
-    // let db_name = "sqlite:/home/bunker/assets2.db";
-    // let pool = sqlx::SqlitePool::begin
-    // Pool::connect(&db_name);
-
-    // sqlx::Pool<sqlx::Sqlite> = Pool::connect(&db_name).await;
-    // let pool: sqlx::Pool<sqlx::MySql> =
-    //        futures::executor::block_on(crate::db::open_mariadb_pool()).unwrap();
-    //    use sqlx::Acquire;
-    //    let mut conn = pool.acquire().await.unwrap();
-    //    let mut tx = conn.begin().await?;
-    //
-    //    sqlx::query("INSERT INTO _sqlx_users_1922 (id) VALUES (@p1)")
-    //        .bind(10_i32)
-    //        .execute(&mut tx)
-    //        .await?;
-    //
-    //    tx.commit().await?;
-
-    // sqlx::query("INSERT INTO _sqlx_users_1922 (id) VALUES (@p1)")
-    //     .bind(10_i32)
-    //     .execute(&mut tx)
-    //     .await?;
-    //
-    // tx.commit().await?;
-
-    let q = format!(
-        "
-            UPDATE versions
-            SET approved = 1
-            WHERE asset_id = {as} AND version = {ve};
-        ",
-        as = &asset_id,
-        ve = json.version,
-    );
-
-    let sql = sqlx::query(&q).execute(&mut connection).await;
-
-    match sql {
-        Ok(_) => CliOutput::new("ok", "version Approved"),
-        Err(e) => CliOutput::new("ok", &format!("Error, could not approve version:{:?}", e)),
-    }
+    CliOutput::new("ok", "ALL GOOD")
 }
-
 // internal - get asset_id if name and location as not provided
 async fn get_asset_id(
     connection: &mut PoolConnection<Sqlite>,
@@ -358,13 +331,87 @@ async fn get_asset_id(
     Ok(asset_id)
 }
 
+pub async fn get_version_id(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+    // get the version_id
+    let q = &format!(
+        "
+            SELECT versions.*
+            FROM assets, versions
+            ON assets.asset_id = versions.asset_id
+            WHERE name='{na}' AND location='{lo}' AND version='{ve}'
+            OR versions.asset_id='{as}' AND version='{ve}';
+        ",
+        na = json.name,
+        lo = json.location,
+        ve = json.version,
+        as = json.asset_id,
+    );
+
+    println!("q-{:}", q);
+
+    // let sql = sqlx::query(&q).execute(&mut connection).await;
+    let sql = sqlx::query(q).fetch_one(&mut connection).await;
+    match sql {
+        Ok(s) => {
+            let version: Version = s.into();
+            println!("{:?}", version);
+            let version_id = version.version_id;
+            println!(">>> {:?}", version_id);
+
+            CliOutput::new("ok", "ok")
+            // let version: Version = s.into();
+            // return Ok(version.version_id);
+        }
+        Err(_) => return CliOutput::new("err", "version ID not found, from name,location "),
+    }
+
+    //
+    // let asset_id: i64 = json.asset_id;
+    // let version: i64 = json.version;
+    //
+    // println!("asset_id {:?} version {:?}", &asset_id, &version);
+    //
+    // let mut q: String = "".to_string();
+    // if asset_id == 0_i64 {
+    //     q = format!("
+    //                 SELECT version_id FROM versions WHERE name='{na}' AND location='{lo}' AND version='{ve}';
+    //             ",
+    //             na=json.name,
+    //             lo=json.location,
+    //             ve=version
+    //             );
+    //     println!("name {:?} location {:?}", &json.name, &json.location);
+    // } else {
+    //     q = format!(
+    //         "
+    //                 SELECT version_id FROM versions WHERE asset_id='{as}' AND version='{ve}';
+    //             ",
+    //         as = asset_id,
+    //         ve=version
+    //     );
+    // }
+    //
+    // println!(".. .. ");
+    // println!("{:?}", &q);
+    //
+    // let sql = sqlx::query(&q).fetch_one(connection).await;
+    // match sql {
+    //     Ok(s) => {
+    //         let version: Version = s.into();
+    //         return Ok(version.version_id);
+    //     }
+    //     Err(_) => {
+    //         return Err(CliOutput::new(
+    //             "err",
+    //             "version ID not found, from name,location ",
+    //         ))
+    //     }
+    // }
+}
+
 //////////////////////////////////////////////////////////////
 // -- used for tables initialization only --
 //////////////////////////////////////////////////////////////
-
-// let conn = sqlite::PoolConnection::connect(&db_name).await;
-// pub async fn initialize(&db_name: &str) -> CliOutput {
-// pub async fn initialize(&db_name: &str) -> CliOutput {
 
 pub async fn initialize(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     //

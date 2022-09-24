@@ -11,6 +11,7 @@ pub enum CommandType {
     Delete,
     Latest,
     Approve,
+    Test,
     Initialize,
 }
 
@@ -116,6 +117,10 @@ pub fn get_args() -> Result<Command, CliOutput> {
         "initialize" => Ok(Command {
             command: CommandType::Initialize,
             json: asset_unwrapped, // dummy json that isn't used for the initialize function
+        }),
+        "test" => Ok(Command {
+            command: CommandType::Test,
+            json: asset_unwrapped,
         }),
         "insert" => match a_name && a_location || asset_id || a_version_id {
             // source and datapath are optional => update asset

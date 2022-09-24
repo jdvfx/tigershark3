@@ -1,8 +1,6 @@
-#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
-
 // use sqlx::sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
-use sqlx::{Acquire, Connection};
+// use sqlx::{Acquire, Connection};
 
 mod assetdef;
 pub mod errors;
@@ -41,6 +39,7 @@ async fn main() {
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,
                         CommandType::Approve => utils::approve(conn, json).await,
+                        CommandType::Test => utils::get_version_id(conn, json).await,
                         CommandType::Initialize => utils::initialize(conn).await,
                     };
                 }
