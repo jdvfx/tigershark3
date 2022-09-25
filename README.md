@@ -24,20 +24,21 @@ syntax:<br>
 
 > 2 SQLite tables (assets/versions)
 
-> Assets
-asset_id	: i64
-name		: String
-location	: String
+> Assets<br>
+asset_id	: i64<br>
+name		: String<br>
+location	: String<br>
 
-> Versions
-version_id	: i64
-version		: i64
-source		: String
-datapath	: String
-depend		: String
-approved	: i64
-status		: i64
-asset_id	: i64
-ctime		: String
-atime		: String
+> Versions<br>
+version_id	: i64<br>
+version		: i64<br>
+source		: String<br>
+datapath	: String<br>
+depend		: String<br>
+approved	: i64<br>
+status		: i64<br>
+asset_id	: i64<br>
+ctime		: String<br>
+atime		: String<br>
+
 
