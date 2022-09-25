@@ -24,12 +24,12 @@ syntax:<br>
 
 > 2 SQLite tables (assets/versions)
 
-> Assets<br>
+### Assets<br>
 asset_id	: i64<br>
 name		: String<br>
 location	: String<br>
 
-> Versions<br>
+### Versions<br>
 version_id	: i64<br>
 version		: i64<br>
 source		: String<br>
