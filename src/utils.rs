@@ -1,18 +1,8 @@
-// #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
-// use std::async_iter;
-// use std::fmt::Error;
-
-//
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
-use sqlx::Acquire;
-// use sqlx::Pool;
-use sqlx::Sqlite;
-// use sqlx::PoolConnection;
-use sqlx::pool::PoolConnection;
-// use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
@@ -273,6 +263,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
     }
 }
 
+// internal - approve all versions in version.depend
 async fn approve_dependencies(
     mut connection: PoolConnection<Sqlite>,
     version_id_depends: Vec<&str>,
@@ -294,8 +285,6 @@ async fn approve_dependencies(
         .await?;
     }
     tx.commit().await?;
-    // if some dependency version_id doesn't exist,
-    // if doesn't get approved (obviously)
     Ok(())
 }
 
