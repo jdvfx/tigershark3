@@ -1,15 +1,18 @@
-#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
+// #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
+// use std::async_iter;
+// use std::fmt::Error;
+
 //
 use crate::assetdef::Version;
 use crate::errors::CliOutput;
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::Acquire;
-use sqlx::Pool;
+// use sqlx::Pool;
 use sqlx::Sqlite;
 // use sqlx::PoolConnection;
 use sqlx::pool::PoolConnection;
-use sqlx::sqlite::SqlitePoolOptions;
+// use sqlx::sqlite::SqlitePoolOptions;
 //
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
@@ -221,12 +224,7 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
     CliOutput::new("ok", &format!("latest : {:?}", last_version))
 }
 
-pub async fn approve(connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    // get the version_id
-
-    let version_id = get_version_id(&mut connection, json).await;
-    println!("version id : {:?}", &version_id);
-
+pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
@@ -245,13 +243,12 @@ pub async fn approve(connection: PoolConnection<Sqlite>, json: AssetJson) -> Cli
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
-        Ok(_) => CliOutput::new("ok", "version Approved"),
-        Err(e) => CliOutput::new("ok", &format!("Error, could not approve version:{:?}", e)),
+        Ok(_) => (),
+        Err(e) => {
+            return CliOutput::new("err", &format!("Error, could not approve version: {:?}", e))
+        }
     }
 
-    // TO DO : approve dependencies as separate function
-    // async fn approve_dependencies(connection: &mut PoolConnection<Sqlite>, depend: Vec<String>) {}
-    //
     // approve dependencies
     let q = format!(
         "
@@ -265,21 +262,27 @@ pub async fn approve(connection: PoolConnection<Sqlite>, json: AssetJson) -> Cli
     let mut depend = "".to_string();
     if sql.is_ok() {
         let version: Version = sql.unwrap().into();
-        println!(". . . version : {:?}", &version);
         depend = version.depend;
     }
-    println!(">>> DEPEND >>> {:?}", depend);
 
     let version_id_depends: Vec<&str> = depend.split(",").collect();
+    let d = approve_dependencies(connection, version_id_depends).await;
+    match d {
+        Ok(_) => CliOutput::new("ok", "Asset and Dependencies approved"),
+        Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {:?}", e)),
+    }
+    // CliOutput::new("ok", "a ok")
+}
 
-    // TODO : remove this nasty unwrap
-    // oh shit! unwraps everywhere...
-    //
-    let conn = connection.acquire().await.unwrap();
-    let mut tx = conn.begin().await.unwrap();
+async fn approve_dependencies(
+    mut connection: PoolConnection<Sqlite>,
+    version_id_depends: Vec<&str>,
+) -> Result<(), sqlx::Error> {
+    let conn = connection.acquire().await?;
+    let mut tx = conn.begin().await?;
 
     for version_id in version_id_depends {
-        println!("--- version_id {}", version_id);
+        println!("> approve: {:?}", &version_id);
         sqlx::query(&format!(
             "
                 UPDATE versions
@@ -289,14 +292,14 @@ pub async fn approve(connection: PoolConnection<Sqlite>, json: AssetJson) -> Cli
             version_id
         ))
         .execute(&mut tx)
-        .await
-        .unwrap();
+        .await?;
     }
-
-    tx.commit().await.unwrap();
-
-    CliOutput::new("ok", "ALL GOOD")
+    tx.commit().await?;
+    // if some dependency version_id doesn't exist,
+    // if doesn't get approved (obviously)
+    Ok(())
 }
+
 // internal - get asset_id if name and location as not provided
 async fn get_asset_id(
     connection: &mut PoolConnection<Sqlite>,
