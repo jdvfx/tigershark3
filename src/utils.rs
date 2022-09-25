@@ -271,7 +271,6 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
         Ok(_) => CliOutput::new("ok", "Asset and Dependencies approved"),
         Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {:?}", e)),
     }
-    // CliOutput::new("ok", "a ok")
 }
 
 async fn approve_dependencies(
@@ -332,87 +331,6 @@ async fn get_asset_id(
         }
     }
     Ok(asset_id)
-}
-
-// >>> GET VERSION ID
-pub async fn test(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    // get the version_id
-    let q = &format!(
-
-        // this is broken, the version_id is WRONNNNNNGGGG!! 100% failure guaranteed
-        "
-            SELECT versions.*
-            FROM assets, versions
-            ON assets.asset_id = versions.asset_id
-            WHERE name='{na}' AND location='{lo}' AND version='{ve}'
-            OR versions.asset_id='{as}' AND version='{ve}';
-        ",
-        na = json.name,
-        lo = json.location,
-        ve = json.version,
-        as = json.asset_id,
-    );
-
-    println!("q-{:}", q);
-
-    // let sql = sqlx::query(&q).execute(&mut connection).await;
-    let sql = sqlx::query(q).fetch_one(&mut connection).await;
-    match sql {
-        Ok(s) => {
-            let version: Version = s.into();
-            println!("{:?}", version);
-            let version_id = version.version_id;
-            println!(">>> {:?}", version_id);
-
-            CliOutput::new("ok", "ok")
-            // let version: Version = s.into();
-            // return Ok(version.version_id);
-        }
-        Err(_) => return CliOutput::new("err", "version ID not found, from name,location "),
-    }
-
-    //
-    // let asset_id: i64 = json.asset_id;
-    // let version: i64 = json.version;
-    //
-    // println!("asset_id {:?} version {:?}", &asset_id, &version);
-    //
-    // let mut q: String = "".to_string();
-    // if asset_id == 0_i64 {
-    //     q = format!("
-    //                 SELECT version_id FROM versions WHERE name='{na}' AND location='{lo}' AND version='{ve}';
-    //             ",
-    //             na=json.name,
-    //             lo=json.location,
-    //             ve=version
-    //             );
-    //     println!("name {:?} location {:?}", &json.name, &json.location);
-    // } else {
-    //     q = format!(
-    //         "
-    //                 SELECT version_id FROM versions WHERE asset_id='{as}' AND version='{ve}';
-    //             ",
-    //         as = asset_id,
-    //         ve=version
-    //     );
-    // }
-    //
-    // println!(".. .. ");
-    // println!("{:?}", &q);
-    //
-    // let sql = sqlx::query(&q).fetch_one(connection).await;
-    // match sql {
-    //     Ok(s) => {
-    //         let version: Version = s.into();
-    //         return Ok(version.version_id);
-    //     }
-    //     Err(_) => {
-    //         return Err(CliOutput::new(
-    //             "err",
-    //             "version ID not found, from name,location ",
-    //         ))
-    //     }
-    // }
 }
 
 //////////////////////////////////////////////////////////////

@@ -39,7 +39,6 @@ async fn main() {
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,
                         CommandType::Approve => utils::approve(conn, json).await,
-                        CommandType::Test => utils::test(conn, json).await,
                         CommandType::Initialize => utils::initialize(conn).await,
                     };
                 }
