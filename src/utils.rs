@@ -88,7 +88,10 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 }
 pub async fn update(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get last version
-    let last_version: i64 = latest_version(&mut connection, json.asset_id).await;
+    let last_version: i64 = match latest_version(&mut connection, json.asset_id).await {
+        Ok(v) => v,
+        Err(_) => 0_i64,
+    };
 
     // add access date - last time the file got read (that can be updated every few days?)
     // don't want to update access date every single time it's accessed - too much for DB
@@ -119,7 +122,10 @@ pub async fn update(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
     }
 }
 
-pub async fn latest_version(connection: &mut PoolConnection<Sqlite>, asset_id: i64) -> i64 {
+pub async fn latest_version(
+    connection: &mut PoolConnection<Sqlite>,
+    asset_id: i64,
+) -> Result<i64, String> {
     let sql = sqlx::query(&format!(
         "
             SELECT version FROM versions WHERE asset_id='{}';
@@ -129,7 +135,7 @@ pub async fn latest_version(connection: &mut PoolConnection<Sqlite>, asset_id: i
     .fetch_all(connection)
     .await;
 
-    let asset_id: i64 = match sql {
+    match sql {
         Ok(sql) => {
             let last_version = sql
                 .iter()
@@ -139,12 +145,10 @@ pub async fn latest_version(connection: &mut PoolConnection<Sqlite>, asset_id: i
                 .map(|r| r.version)
                 .max()
                 .unwrap_or(0);
-            last_version
+            Ok(last_version)
         }
-
-        Err(_) => 0_i64,
-    };
-    asset_id
+        Err(e) => Err(format!("Error:{:?}", e)),
+    }
 }
 
 pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
@@ -210,8 +214,10 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
         Err(cli) => return cli,
     };
     // get last version
-    let last_version: i64 = latest_version(&mut connection, asset_id).await;
-    CliOutput::new("ok", &format!("latest : {:?}", last_version))
+    match latest_version(&mut connection, asset_id).await {
+        Ok(v) => CliOutput::new("ok", &format!("latest : {:?}", v)),
+        Err(e) => CliOutput::new("err", &format!("no version found: {:?}", e)),
+    }
 }
 
 pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
