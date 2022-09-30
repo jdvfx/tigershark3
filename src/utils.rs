@@ -13,24 +13,14 @@ fn now() -> String {
     now
 }
 
-static DEBUG: bool = true;
-
-fn dbug(s: &str) {
-    if DEBUG {
-        println!("{}", s);
-    }
-}
-
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
-        dbug("asset exists");
         // asset exist, let's up-version then
         if !(json.source.is_empty() || json.datapath.is_empty()) {
             update(connection, json).await;
         }
     } else {
-        dbug("asset_id doesn't exists, use name+location");
         // asset_id doesn't exist, use name+location
         let q = format!(
             "
@@ -43,7 +33,6 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
         let sql = sqlx::query(&q).fetch_one(&mut connection).await;
         if sql.is_err() {
-            dbug("asset_id not found, create new asset");
             // asset ID not found, create a new asset
             let sql2 = sqlx::query(&format!(
                 "
@@ -56,7 +45,6 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
             .await;
             match sql2 {
                 Ok(_sql2) => {
-                    dbug("new asset created");
                     // new asset created
                     // let's find out its asset_id
                     let sql3 = sqlx::query(&format!(
@@ -74,7 +62,6 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                             // found the asset_id of the newly created asset
                             let asset: Asset = s.into();
                             json.asset_id = asset.asset_id;
-                            dbug(&format!("new asset ID = {:?}", &json.asset_id));
                             // new asset created
                             if !(json.source.is_empty() || json.datapath.is_empty()) {
                                 update(connection, json).await;
@@ -92,15 +79,9 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         } else {
             let asset: Asset = sql.unwrap().into();
             json.asset_id = asset.asset_id;
-            dbug(&format!("asset ID found = {:?}", &json.asset_id));
 
-            dbug(&format!(
-                "source:{},datapath:{}",
-                &json.source, &json.datapath
-            ));
 
             if !(json.source.is_empty() || json.datapath.is_empty()) {
-                dbug(&format!("source and datapath found > {:?} ", json));
                 update(connection, json).await;
             }
         }
@@ -108,7 +89,6 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     CliOutput::new("ok", "Asset Created")
 }
 pub async fn update(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    dbug("update >>>");
     // get last version
     let last_version: i64 = match latest_version(&mut connection, json.asset_id).await {
         Ok(v) => v,
@@ -134,16 +114,13 @@ pub async fn update(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
         ct = now(),
     );
 
-    println!("{:?}", &q);
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
         Ok(_) => {
-            println!("OK >>>");
             CliOutput::new("ok", "Asset Version Created")
         }
         Err(e) => {
-            println!("err {:?}", &e);
             CliOutput::new(
                 "err",
                 &format!("Error creating Asset Version : {:?} {}", e, q),
@@ -308,7 +285,6 @@ async fn approve_dependencies(
     let mut tx = conn.begin().await?;
 
     for version_id in version_id_depends {
-        println!("> approve: {:?}", &version_id);
         sqlx::query(&format!(
             "
                 UPDATE versions
