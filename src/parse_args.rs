@@ -103,10 +103,6 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let a_version = asset.version.is_some();
     let a_version_id = asset.version_id.is_some();
 
-    // let a_source = asset.source.is_some();
-    // let a_datapath = asset.datapath.is_some();
-    // let a_depend = asset.depend.is_some();
-
     // unpack JsonOption into JsonString
     let asset_unwrapped: AssetJson = json_unwrap_or(asset);
 

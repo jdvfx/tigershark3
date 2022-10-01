@@ -332,33 +332,8 @@ async fn get_asset_id(
     Ok(asset_id)
 }
 
-//////////////////////////////////////////////////////////////
-// -- used for tables initialization only --
-//////////////////////////////////////////////////////////////
-
+// initialize assets and versions tables
 pub async fn initialize(mut connection: PoolConnection<Sqlite>) -> CliOutput {
-    //
-    //
-    // >>>> TO DO <<<<
-    // create database if it doesn't exist
-    //
-    //
-    // if !sqlx::Sqlite::database_exists(&db_name).await {
-    // sqlx::Sqlite::create_database(&db_name).await;
-    // }
-
-    // let sql = sqlx::query(&format!(
-    //     "
-    //         CREATE DATABASE IF NOT EXISTS '{}';
-    //         ",
-    //     &db_name
-    // ))
-    // .execute()
-    // .await;
-    // match sql {
-    //     Ok(..) => CliOutput::new("ok", "database initialized"),
-    //     Err(e) => CliOutput::new("err", &format!("error initializing database {:?}", e)),
-    // }
     //
     let sql = sqlx::query(
         r#"
