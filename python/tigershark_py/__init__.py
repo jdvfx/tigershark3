@@ -1,4 +1,5 @@
 ##!/usr/bin/env python3
+import hou
 import json
 from subprocess import Popen, PIPE
 
@@ -64,7 +65,7 @@ class TigerShark:
         name = self.node.evalParm("name")
         location = self.node.evalParm("location")
         datapath = self.node.evalParm("datapath")
-        source = self.node.evalParm("source")
+        source = hou.hipFile.path()
         #
         asset = {
             "name": name,
