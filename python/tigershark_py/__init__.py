@@ -59,5 +59,22 @@ class TigerShark:
         output = self.ts(command,asset)
         print(output)
 
+    def insert(self):
+
+        name = self.node.evalParm("name")
+        location = self.node.evalParm("location")
+        datapath = self.node.evalParm("datapath")
+        source = self.node.evalParm("source")
+        #
+        asset = {
+            "name": name,
+            "location": location,
+            "datapath": datapath,
+            "source": source,
+        }
+        command = "insert"
+
+        output = self.ts(command,asset)
+        print(output)
 
 
