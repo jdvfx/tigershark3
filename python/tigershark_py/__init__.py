@@ -38,11 +38,12 @@ class TigerShark:
             exit_code = process.wait()
             output = output.decode('utf-8')
             if exit_code == 0:
-                return output
+                return (0,output)
+
             else:
-                return ("ERR:",output)
+                return (1,output)
         except:
-            return ("ERR:","Python Popen failed")
+            return (1,"Python Popen failed")
 
     def source(self):
 
@@ -57,8 +58,7 @@ class TigerShark:
         }
         command = "source"
 
-        output = self.ts(command,asset)
-        print(output)
+        return(self.ts(command,asset))
 
     def insert(self):
 
@@ -76,6 +76,9 @@ class TigerShark:
         command = "insert"
 
         output = self.ts(command,asset)
-        print(output)
+        if output[0] == 0:
+            version = int(output[1])
+            self.node.parm("version").set(version)
+        return output
 
 
