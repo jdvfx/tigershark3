@@ -24,3 +24,40 @@ def tigershark(command,asset):
     except:
         return (1,"Python Popen failed")
 
+
+class TigerShark:
+
+    def __init__(self,node):
+        self.node = node
+
+    def ts(self,command,asset):
+        try:
+            process = Popen([ts_exe,"-c",command,"-a",json.dumps(asset)], stdout=PIPE)
+            (output, err) = process.communicate()
+            exit_code = process.wait()
+            output = output.decode('utf-8')
+            if exit_code == 0:
+                return output
+            else:
+                return ("ERR:",output)
+        except:
+            return ("ERR:","Python Popen failed")
+
+    def source(self):
+
+        name = self.node.evalParm("name")
+        location = self.node.evalParm("location")
+        version = self.node.evalParm("version")
+        #
+        asset = {
+            "name": name,
+            "location": location,
+            "version": version,
+        }
+        command = "source"
+
+        output = self.ts(command,asset)
+        print(output)
+
+
+
