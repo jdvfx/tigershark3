@@ -115,9 +115,6 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         ct = now(),
     );
 
-    // should be able to add RETURNING asset_id   after VALUES ()
-    //
-
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
         Ok(_) => return CliOutput::new("ok", &format!("{new_version}")),
