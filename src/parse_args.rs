@@ -11,7 +11,6 @@ pub enum CommandType {
     Delete,
     Latest,
     Approve,
-    Initialize,
 }
 
 #[derive(Debug)]
@@ -82,6 +81,7 @@ fn json_unwrap_or(json_o: JsonOption) -> AssetJson {
 pub fn get_args() -> Result<Command, CliOutput> {
     //
     let args = Args::parse();
+
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above
@@ -109,10 +109,6 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
     match args.command.as_str() {
-        "initialize" => Ok(Command {
-            command: CommandType::Initialize,
-            json: asset_unwrapped, // dummy json that isn't used for the initialize function
-        }),
         "insert" => match a_name && a_location || asset_id || a_version_id {
             // source and datapath are optional => update asset
             // otherwize, just create a new asset if needed

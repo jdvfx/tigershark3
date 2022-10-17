@@ -1,6 +1,4 @@
-// use sqlx::sqlite;
 use sqlx::sqlite::SqlitePoolOptions;
-// use sqlx::{Acquire, Connection};
 
 mod assetdef;
 pub mod errors;
@@ -9,7 +7,6 @@ pub mod utils;
 pub mod parse_args;
 use errors::{exit_or_panic, CliOutput};
 use parse_args::CommandType;
-//
 
 #[tokio::main]
 async fn main() {
@@ -39,7 +36,6 @@ async fn main() {
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,
                         CommandType::Approve => utils::approve(conn, json).await,
-                        CommandType::Initialize => utils::initialize(conn).await,
                     };
                 }
                 Err(e) => {
