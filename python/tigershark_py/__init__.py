@@ -20,13 +20,13 @@ class TigerShark:
     def __init__(self,node):
         self.node = node
 
-    # houdini
+    # backup houdini .hip/.hipnc file
     def backup_hip(self):
 
         hipfile = hou.hipFile
         hipfile.save()
 
-        ext = hipfile.path().split(".")[-1]
+        hip_extension = hipfile.path().split(".")[-1]
         datapath = self.node.evalParm("datapath")
         datapath = datapath.split("/")
 
@@ -35,8 +35,9 @@ class TigerShark:
 
         now = datetime.today().strftime("%Y%m%d_%H%M%S")
         dir = "/".join(datapath) + "/.tigershark/"
-        file = dataname + "-"+now+"." + ext
-        backupfile = dir + file 
+        file = dataname + "-"+now+"." + hip_extension
+        backupfile = dir + file
+        # copy/rename current hipfile to backup directory (.tigershark) 
         command = "mkdir -p "+ dir + " && cp " + hipfile.path() + " " + backupfile
         os.system(command)
         # set backup file to read only
@@ -54,7 +55,7 @@ class TigerShark:
     def ts(self,command,asset):
         try:
             process = Popen([ts_exe,"-c",command,"-a",json.dumps(asset)], stdout=PIPE)
-            (output, err) = process.communicate()
+            (output, _err) = process.communicate()
             exit_code = process.wait()
             output = output.decode("utf-8")
             if exit_code == 0:
@@ -72,17 +73,18 @@ class TigerShark:
         for parm in asset_parms:
             asset[parm] = self.node.evalParm(parm)
         return asset
-    
-    # tigershark -c source 
-    def source(self):
-        asset = self.build_asset()
-        command = "source"
-        return(self.ts(command,asset))
+   
+    # Tigershark commands (CommandType enum)
+    # Insert
+    # Source
+    # Delete
+    # Latest
+    # Approve
 
     # tigershark -c insert
     def insert(self):
+        # pre-increment version to update datapath
         self.increment_version()
-
         source = self.backup_hip()
         asset = self.build_asset()
         asset["source"]=source
@@ -92,6 +94,46 @@ class TigerShark:
         if output[0] == 0:
             version = int(output[1])
             self.node.parm("version").set(version)
+            # the version number has been pre-incremented already
+            # this part is redundant - should get some UI feedback
+            # when the insert function is successful or not instead.
+
         return output
+
+    # tigershark -c source 
+    def source(self):
+        asset = self.build_asset()
+        command = "source"
+        return(self.ts(command,asset))
+
+    # tigershark -c delete
+    def delete(self):
+        asset = self.build_asset()
+        command = "delete"
+        return(self.ts(command,asset))
+
+    # tigershark -c latest
+    def latest(self):
+        asset = self.build_asset()
+        command = "latest"
+        return(self.ts(command,asset))
+
+    # tigershark -c approve
+    def approve(self):
+        asset = self.build_asset()
+        command = "approve"
+        return(self.ts(command,asset))
+
+    # tigershark -c source (and open hip file)
+    def open_source(self):
+        asset = self.build_asset()
+        command = "source"
+
+        output = self.ts(command,asset)
+        if output[0] == 0:
+            source_file = output[1]
+            # need to test if this works and asks to save
+            # the current hip file before openning the backup
+            hou.hipFile.load(source_file)
 
 
