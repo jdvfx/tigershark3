@@ -260,17 +260,26 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
     );
 
     let sql = sqlx::query(&q).fetch_one(&mut connection).await;
+
     let mut depend = "".to_string();
     if sql.is_ok() {
         let version: Version = sql.unwrap().into();
         depend = version.depend;
     }
 
-    let version_id_depends: Vec<&str> = depend.split(",").collect();
-    let d = approve_dependencies(connection, version_id_depends).await;
-    match d {
-        Ok(_) => CliOutput::new("ok", "Asset and Dependencies approved"),
-        Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {:?}", e)),
+    let version_id_depends: Vec<&str> = depend.split(",").filter(|x|!x.is_empty()).collect();
+
+    match version_id_depends.len() {
+        0 => {
+            return CliOutput::new("ok", "Asset approved, no dependencies")
+        },
+        _ => {
+            let d = approve_dependencies(connection, version_id_depends).await;
+            match d {
+                Ok(_) => CliOutput::new("ok", "Asset and Dependencies approved"),
+                Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {:?}", e)),
+            }
+        }
     }
 }
 

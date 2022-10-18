@@ -122,6 +122,7 @@ class TigerShark:
     def approve(self):
         asset = self.build_asset()
         command = "approve"
+        print(asset)
         return(self.ts(command,asset))
 
     # tigershark -c source (and open hip file)
