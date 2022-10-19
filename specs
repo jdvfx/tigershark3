@@ -1,0 +1,11 @@
+
+tigershark3 -c command -a json
+
+tigershark3 -c insert -a '{"name":"asset_name","location":"asset_location"}'
+
+"insert" => a_name && a_location || (asset_id && datapath && source)
+"source" => (a_name && a_location || asset_id) && a_version || a_version_id
+"delete" => (a_name && a_location || asset_id) && a_version || a_version_id 
+"latest" => a_name && a_location || asset_id 
+"approve" =>match (a_name && a_location || asset_id) && a_version || a_version_id 
+
