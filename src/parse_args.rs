@@ -109,7 +109,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
     match args.command.as_str() {
-        "insert" => match a_name && a_location || asset_id || a_version_id {
+        "insert" => match a_name && a_location || asset_id {
             // source and datapath are optional => update asset
             // otherwize, just create a new asset if needed
             true => Ok(Command {

@@ -19,6 +19,8 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         // asset exist, let's up-version then
         if !(json.source.is_empty() || json.datapath.is_empty()) {
             return create_version(connection, json).await;
+        } else {
+            CliOutput::new("err", "Asset NOT created: need source and datapath")
         }
     } else {
         // asset_id doesn't exist, use name+location
@@ -65,6 +67,8 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                             // new asset created
                             if !(json.source.is_empty() || json.datapath.is_empty()) {
                                 return create_version(connection, json).await;
+                            } else {
+                                CliOutput::new("err", "Asset NOT created: need source and datapath")
                             }
                         }
                         Err(e) => {
@@ -82,10 +86,11 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
             if !(json.source.is_empty() || json.datapath.is_empty()) {
                 return create_version(connection, json).await;
+            } else {
+                CliOutput::new("err", "Asset NOT created: need source and datapath")
             }
         }
     }
-    CliOutput::new("ok", "Asset Created")
 }
 
 pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
@@ -94,6 +99,8 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         Ok(v) => v,
         Err(_) => 0_i64,
     };
+
+    print!("?? {}", &last_version);
 
     let new_version: i64 = last_version + 1_i64;
     // add access date - last time the file got read (that can be updated every few days?)
@@ -114,6 +121,8 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         st = 1,
         ct = now(),
     );
+
+    print!("?? {}", &q);
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
