@@ -157,6 +157,12 @@ pub async fn latest_version(
 }
 
 pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+
+
+    // $$$$$$$$$$$$$$$$$$$$$$$$
+    // # NEED to mutate Json if version_id is provided, add version if missing
+    // $$$$$$$$$$$$$$$$$$$$$$$$
+    //
     // get asset_id :  if json.asset.id is missing, use name and location to quiery it
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
@@ -170,6 +176,9 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
         ass = &asset_id,
         ve = json.version,
     );
+
+
+
 
     let sql = sqlx::query(&q).fetch_one(&mut connection).await;
 
@@ -226,6 +235,11 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
 }
 
 pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+
+    // $$$$$$$$$$$$$$$$$$$$$$$$
+    // # NEED to mutate Json if version_id is provided, add version if missing
+    // $$$$$$$$$$$$$$$$$$$$$$$$
+
     let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
     let asset_id: i64 = match asset_id_ {
         Ok(a) => a,
@@ -267,12 +281,10 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
         depend = version.depend;
     }
 
-    let version_id_depends: Vec<&str> = depend.split(",").filter(|x|!x.is_empty()).collect();
+    let version_id_depends: Vec<&str> = depend.split(",").filter(|x| !x.is_empty()).collect();
 
     match version_id_depends.len() {
-        0 => {
-            return CliOutput::new("ok", "Asset approved, no dependencies")
-        },
+        0 => return CliOutput::new("ok", "Asset approved, no dependencies"),
         _ => {
             let d = approve_dependencies(connection, version_id_depends).await;
             match d {
@@ -313,17 +325,32 @@ async fn get_asset_id(
     json: AssetJson,
 ) -> Result<i64, CliOutput> {
     let asset_id: i64 = json.asset_id;
+    let version_id: i64 = json.version_id;
     //
+    // if no asset id found, get it from name+location or version_id
+
     if asset_id == 0_i64 {
-        let sql = sqlx::query(&format!(
-            "
-                SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
-            ",
-            na = json.name,
-            lo = json.location,
-        ))
-        .fetch_one(connection)
-        .await;
+        let q = match version_id {
+            0_i64 => {
+                format!(
+                    "
+                    SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
+                    ",
+                    na = json.name,
+                    lo = json.location,
+                )
+            }
+            _ => {
+                format!(
+                    "
+                    SELECT asset_id FROM versions WHERE version_id='{ve}';
+                    ",
+                    ve = version_id
+                )
+            }
+        };
+
+        let sql = sqlx::query(&q).fetch_one(connection).await;
 
         match sql {
             Ok(s) => {
