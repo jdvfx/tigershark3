@@ -156,29 +156,20 @@ pub async fn latest_version(
     }
 }
 
-pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-
-
-    // $$$$$$$$$$$$$$$$$$$$$$$$
-    // # NEED to mutate Json if version_id is provided, add version if missing
-    // $$$$$$$$$$$$$$$$$$$$$$$$
+pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     //
-    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
-    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
-    let asset_id: i64 = match asset_id_ {
-        Ok(a) => a,
-        Err(cli) => return cli,
-    };
+    mutate_json(&mut connection, &mut json).await;
+    if json.asset_id == 0_i64 || json.version == 0_i64 {
+        return CliOutput::new("err", "Error, could not find asset_id and version");
+    }
+
     let q = format!(
         "
             SELECT source FROM versions WHERE asset_id='{ass}' AND version='{ve}';
         ",
-        ass = &asset_id,
+        ass = json.asset_id,
         ve = json.version,
     );
-
-
-
 
     let sql = sqlx::query(&q).fetch_one(&mut connection).await;
 
@@ -192,12 +183,12 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
     }
 }
 
-pub async fn delete(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
-    let asset_id: i64 = match asset_id_ {
-        Ok(a) => a,
-        Err(cli) => return cli,
-    };
+pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
+    //
+    mutate_json(&mut connection, &mut json).await;
+    if json.asset_id == 0_i64 || json.version == 0_i64 {
+        return CliOutput::new("err", "Error, could not find asset_id and version");
+    }
 
     let q = format!(
         "
@@ -205,7 +196,7 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
             SET status = 2
             WHERE asset_id = {ass} AND version = {ve};
         ",
-        ass = &asset_id,
+        ass = json.asset_id,
         ve = json.version,
     );
 
@@ -220,39 +211,33 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> 
     }
 }
 
-pub async fn latest(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
-    // get asset_id :  if json.asset.id is missing, use name and location to quiery it
-    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
-    let asset_id: i64 = match asset_id_ {
-        Ok(a) => a,
-        Err(cli) => return cli,
-    };
+pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
+    // get asset_id :  if json.asset.id is missing, use name+location or version_id to quiery it
+    mutate_json(&mut connection, &mut json).await;
+    if json.asset_id == 0_i64 {
+        return CliOutput::new("err", "Error, could not find asset_id");
+    }
     // get last version
-    match latest_version(&mut connection, asset_id).await {
+    match latest_version(&mut connection, json.asset_id).await {
         Ok(v) => CliOutput::new("ok", &format!("latest : {:?}", v)),
         Err(e) => CliOutput::new("err", &format!("no version found: {:?}", e)),
     }
 }
 
-pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
+    //
+    mutate_json(&mut connection, &mut json).await;
+    if json.asset_id == 0_i64 || json.version == 0_i64 {
+        return CliOutput::new("err", "Error, could not find asset_id and version");
+    }
 
-    // $$$$$$$$$$$$$$$$$$$$$$$$
-    // # NEED to mutate Json if version_id is provided, add version if missing
-    // $$$$$$$$$$$$$$$$$$$$$$$$
-
-    let asset_id_ = get_asset_id(&mut connection, json.clone()).await;
-    let asset_id: i64 = match asset_id_ {
-        Ok(a) => a,
-        Err(cli) => return cli,
-    };
-    // approve the current version
     let q = format!(
         "
             UPDATE versions
             SET approved = 1
             WHERE asset_id = {ass} AND version = {ve};
         ",
-        ass = &asset_id,
+        ass = json.asset_id,
         ve = json.version,
     );
 
@@ -269,7 +254,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, json: AssetJson) ->
         "
             SELECT depend FROM versions WHERE asset_id='{ass}' AND version='{ve}';
         ",
-        ass = &asset_id,
+        ass = json.asset_id,
         ve = json.version,
     );
 
@@ -319,51 +304,38 @@ async fn approve_dependencies(
     Ok(())
 }
 
-// internal - get asset_id if name and location as not provided
-async fn get_asset_id(
-    connection: &mut PoolConnection<Sqlite>,
-    json: AssetJson,
-) -> Result<i64, CliOutput> {
+async fn mutate_json(connection: &mut PoolConnection<Sqlite>, json: &mut AssetJson) {
     let asset_id: i64 = json.asset_id;
     let version_id: i64 = json.version_id;
-    //
     // if no asset id found, get it from name+location or version_id
-
     if asset_id == 0_i64 {
-        let q = match version_id {
-            0_i64 => {
-                format!(
-                    "
+        if version_id == 0_i64 {
+            let q = format!(
+                "
                     SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
                     ",
-                    na = json.name,
-                    lo = json.location,
-                )
+                na = json.name,
+                lo = json.location,
+            );
+            let sql = sqlx::query(&q).fetch_one(connection).await;
+            if sql.is_ok() {
+                let asset: Asset = sql.unwrap().into();
+                json.asset_id = asset.asset_id;
             }
-            _ => {
-                format!(
-                    "
-                    SELECT asset_id FROM versions WHERE version_id='{ve}';
+        } else {
+            let q = format!(
+                "
+                    SELECT asset_id,version FROM versions WHERE version_id='{ve}';
                     ",
-                    ve = version_id
-                )
-            }
-        };
-
-        let sql = sqlx::query(&q).fetch_one(connection).await;
-
-        match sql {
-            Ok(s) => {
-                let asset: Asset = s.into();
-                return Ok(asset.asset_id);
-            }
-            Err(_) => {
-                return Err(CliOutput::new(
-                    "err",
-                    "asset ID not found, from name,location ",
-                ))
+                ve = version_id
+            );
+            let sql = sqlx::query(&q).fetch_one(connection).await;
+            if sql.is_ok() {
+                let version: Version = sql.unwrap().into();
+                json.asset_id = version.asset_id;
+                // version might be provided by the user, or not, just get it.
+                json.version = version.version;
             }
         }
     }
-    Ok(asset_id)
 }
