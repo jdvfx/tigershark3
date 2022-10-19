@@ -16,12 +16,7 @@ fn now() -> String {
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
-        // asset exist, let's up-version then
-        if !(json.source.is_empty() || json.datapath.is_empty()) {
-            return create_version(connection, json).await;
-        } else {
-            CliOutput::new("err", "Asset NOT created: need source and datapath")
-        }
+        return create_version(connection, json).await;
     } else {
         // asset_id doesn't exist, use name+location
         let q = format!(
@@ -64,12 +59,7 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                             // found the asset_id of the newly created asset
                             let asset: Asset = s.into();
                             json.asset_id = asset.asset_id;
-                            // new asset created
-                            if !(json.source.is_empty() || json.datapath.is_empty()) {
-                                return create_version(connection, json).await;
-                            } else {
-                                CliOutput::new("err", "Asset NOT created: need source and datapath")
-                            }
+                            return create_version(connection, json).await;
                         }
                         Err(e) => {
                             return CliOutput::new("err", &format!("Couldn't find ID: {:?}", e))
@@ -83,12 +73,7 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         } else {
             let asset: Asset = sql.unwrap().into();
             json.asset_id = asset.asset_id;
-
-            if !(json.source.is_empty() || json.datapath.is_empty()) {
-                return create_version(connection, json).await;
-            } else {
-                CliOutput::new("err", "Asset NOT created: need source and datapath")
-            }
+            return create_version(connection, json).await;
         }
     }
 }
