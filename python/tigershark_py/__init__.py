@@ -92,8 +92,12 @@ class TigerShark:
 
         output = self.ts(command,asset)
         if output[0] == 0:
-            version = int(output[1])
-            self.node.parm("version").set(version)
+            try:
+                version = int(output[1])
+                self.node.parm("version").set(version)
+            except:
+                print("Python failure, no surprise there")
+            
             # the version number has been pre-incremented already
             # this part is redundant - should get some UI feedback
             # when the insert function is successful or not instead.
