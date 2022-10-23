@@ -28,7 +28,10 @@ async fn main() {
                 Ok(conn) => {
                     // Get asset json (eg: -a '{"name":"box",...}')
                     let json = args.json;
-                    // Get command (eg: -c create )
+                    //
+                    // it's OK to unwrap() the json below,
+                    // it has been already checked in json_unwrap_or()
+                    //
                     // Execute one of the commands
                     cli_output = match args.command {
                         CommandType::Insert => utils::insert(conn, json.unwrap()).await,
