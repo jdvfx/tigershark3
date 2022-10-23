@@ -13,6 +13,10 @@ fn now() -> String {
     now
 }
 
+pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
+    CliOutput::new("ok", &format!("test good , {:?}", connection))
+}
+// first, let's find out if the asset exists
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {

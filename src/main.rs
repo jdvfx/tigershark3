@@ -31,11 +31,12 @@ async fn main() {
                     // Get command (eg: -c create )
                     // Execute one of the commands
                     cli_output = match args.command {
-                        CommandType::Insert => utils::insert(conn, json).await,
-                        CommandType::Source => utils::source(conn, json).await,
-                        CommandType::Delete => utils::delete(conn, json).await,
-                        CommandType::Latest => utils::latest(conn, json).await,
-                        CommandType::Approve => utils::approve(conn, json).await,
+                        CommandType::Insert => utils::insert(conn, json.unwrap()).await,
+                        CommandType::Source => utils::source(conn, json.unwrap()).await,
+                        CommandType::Delete => utils::delete(conn, json.unwrap()).await,
+                        CommandType::Latest => utils::latest(conn, json.unwrap()).await,
+                        CommandType::Approve => utils::approve(conn, json.unwrap()).await,
+                        CommandType::Test => utils::test(conn).await,
                     };
                 }
                 Err(e) => {
