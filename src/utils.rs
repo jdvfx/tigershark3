@@ -4,7 +4,7 @@ use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
-pub async fn test(mut connection: PoolConnection<Sqlite>) -> CliOutput {
+pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     // find asset for purge
     let q = format!(
         "
@@ -23,11 +23,16 @@ pub async fn test(mut connection: PoolConnection<Sqlite>) -> CliOutput {
                 .iter()
                 .map(|r| r.datapath.clone())
                 .collect::<Vec<String>>();
-            println!("{:?}",versions_to_purge)
+
+            let mut s: String = String::from("");
+            for i in versions_to_purge.iter() {
+                s.push_str(i);
+                s.push_str("#");
+            }
+            CliOutput::new("ok", &format!("{:?}", s))
         }
-        Err(e) => println!("ERR - bla")
+        Err(e) => CliOutput::new("err", &format!("Cannot access versions to purge {:?}", e)),
     }
-    CliOutput::new("ok", "bla")
 }
 
 // pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {

@@ -39,7 +39,7 @@ async fn main() {
                         CommandType::Delete => utils::delete(conn, json.unwrap()).await,
                         CommandType::Latest => utils::latest(conn, json.unwrap()).await,
                         CommandType::Approve => utils::approve(conn, json.unwrap()).await,
-                        CommandType::Test => utils::test(conn).await,
+                        CommandType::Purge => utils::purge(conn).await,
                     };
                 }
                 Err(e) => {

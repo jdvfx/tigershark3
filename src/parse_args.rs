@@ -11,7 +11,7 @@ pub enum CommandType {
     Delete,
     Latest,
     Approve,
-    Test,
+    Purge,
 }
 
 #[derive(Debug)]
@@ -113,8 +113,8 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
     match args.command.as_str() {
-        "test" => Ok(Command {
-            command: CommandType::Test,
+        "purge" => Ok(Command {
+            command: CommandType::Purge,
             json: None,
         }),
         "insert" => match (a_name && a_location) || (a_asset_id && a_datapath && a_source) {
