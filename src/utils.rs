@@ -4,6 +4,36 @@ use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
+pub async fn test(mut connection: PoolConnection<Sqlite>) -> CliOutput {
+    // find asset for purge
+    let q = format!(
+        "
+            SELECT * FROM versions
+            WHERE status=2;
+        ",
+    );
+    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+
+    match sql {
+        Ok(sql) => {
+            let versions_to_purge: Vec<String> = sql
+                .iter()
+                .map(|r| r.into())
+                .collect::<Vec<Version>>()
+                .iter()
+                .map(|r| r.datapath.clone())
+                .collect::<Vec<String>>();
+            println!("{:?}",versions_to_purge)
+        }
+        Err(e) => println!("ERR - bla")
+    }
+    CliOutput::new("ok", "bla")
+}
+
+// pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
+//     CliOutput::new("ok", &format!("test good , {:?}", connection))
+// }
+//
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
     let d = local.date();
@@ -13,9 +43,6 @@ fn now() -> String {
     now
 }
 
-pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
-    CliOutput::new("ok", &format!("test good , {:?}", connection))
-}
 // first, let's find out if the asset exists
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
