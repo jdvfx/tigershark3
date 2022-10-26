@@ -18,6 +18,7 @@ pub enum CommandType {
 pub struct Command {
     pub command: CommandType,
     pub json: Option<AssetJson>,
+    pub extra_args: Option<String>,
 }
 
 /// Parse Command and Asset(json) arguments
@@ -31,6 +32,10 @@ struct Args {
     /// json string representing the asset
     #[clap(short, long, value_parser)]
     asset: Option<String>,
+
+    /// extra args to some commands
+    #[clap(short, long, value_parser)]
+    extra_args: Option<String>,
 }
 
 // serialized by Serde (could have missing fields: Options)
@@ -116,6 +121,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
         "purge" => Ok(Command {
             command: CommandType::Purge,
             json: None,
+            extra_args: None,
         }),
         "insert" => match (a_name && a_location) || (a_asset_id && a_datapath && a_source) {
             // source and datapath are optional => update asset
@@ -123,6 +129,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::Insert,
                 json: Some(asset_unwrapped),
+                extra_args: None,
             }),
             _ => Err(CliOutput::new("err", "create : Asset missing some Keys")),
         },
@@ -130,6 +137,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::Source,
                 json: Some(asset_unwrapped),
+                extra_args: None,
             }),
             _ => Err(CliOutput::new("err", "source : Asset missing some Keys")),
         },
@@ -137,6 +145,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::Delete,
                 json: Some(asset_unwrapped),
+                extra_args: None,
             }),
             _ => Err(CliOutput::new("err", "delete : Asset missing some Keys")),
         },
@@ -144,6 +153,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::Latest,
                 json: Some(asset_unwrapped),
+                extra_args: None,
             }),
             _ => Err(CliOutput::new("err", "latest : Asset missing some Keys")),
         },
@@ -151,6 +161,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::Approve,
                 json: Some(asset_unwrapped),
+                extra_args: None,
             }),
             _ => Err(CliOutput::new("err", "approve : Asset missing some Keys")),
         },
