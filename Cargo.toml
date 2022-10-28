@@ -5,14 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[bin]]
-name = "source"
-src = "bin/source.rs"
-
-[[bin]]
-name = "tigershark3"
-src = "main.rs"
-
 [dependencies]
 
 sqlx = { version = "0.6.1", default-features=false , features = [ "runtime-tokio-rustls", "macros", "sqlite"] }
