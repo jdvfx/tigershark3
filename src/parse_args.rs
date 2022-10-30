@@ -91,7 +91,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above
-    let asset_str = args.asset.unwrap_or("{}".to_string()).to_string();
+    let asset_str = args.asset.unwrap_or_else(|| "{}".to_string());
     let asset_result: serde_json::Result<JsonOption> = serde_json::from_str(&asset_str);
 
     let asset: JsonOption = match asset_result {
@@ -99,7 +99,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
         Err(r) => {
             return Err(CliOutput::new(
                 "err",
-                &format!("Err: bad json format: {} : {:?}", asset_str, r),
+                &format!("Err: bad json format: {asset_str} : {r:?}"),
             ))
         }
     };

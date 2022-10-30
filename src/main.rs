@@ -45,11 +45,11 @@ async fn main() {
                 Err(e) => {
                     // TODO : create database if it doesn't exist
                     cli_output =
-                        CliOutput::new("err", &format!("Error with the connection: {:?}", e));
+                        CliOutput::new("err", &format!("Error with the connection: {e:?}"));
                 }
             }
         }
-        Err(e) => cli_output = CliOutput::new("err", &format!("Error parsing args: {:?}", e)),
+        Err(e) => cli_output = CliOutput::new("err", &format!("Error parsing args: {e:?}")),
     }
     exit_or_panic(cli_output);
 }

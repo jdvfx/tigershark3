@@ -6,12 +6,11 @@ use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
 pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     // find asset for purge
-    let q = format!(
-        "
+    let q = "
             SELECT * FROM versions
             WHERE status=2;
-        ",
-    );
+        "
+    .to_string();
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;
 
     match sql {
@@ -27,11 +26,11 @@ pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
             let mut s: String = String::from("");
             for i in versions_to_purge.iter() {
                 s.push_str(i);
-                s.push_str("#");
+                s.push('#');
             }
-            CliOutput::new("ok", &format!("{:?}", s))
+            CliOutput::new("ok", &format!("{s:?}"))
         }
-        Err(e) => CliOutput::new("err", &format!("Cannot access versions to purge {:?}", e)),
+        Err(e) => CliOutput::new("err", &format!("Cannot access versions to purge {e:?}")),
     }
 }
 
@@ -98,12 +97,12 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                             return create_version(connection, json).await;
                         }
                         Err(e) => {
-                            return CliOutput::new("err", &format!("Couldn't find ID: {:?}", e))
+                            return CliOutput::new("err", &format!("Couldn't find ID: {e:?}"))
                         }
                     }
                 }
                 Err(e) => {
-                    return CliOutput::new("err", &format!("Error creating Asset : {:?}", e));
+                    return CliOutput::new("err", &format!("Error creating Asset : {e:?}"));
                 }
             }
         } else {
@@ -116,10 +115,9 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
 pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
     // get last version
-    let last_version: i64 = match latest_version(&mut connection, json.asset_id).await {
-        Ok(v) => v,
-        Err(_) => 0_i64,
-    };
+    let last_version: i64 = latest_version(&mut connection, json.asset_id)
+        .await
+        .unwrap_or(0_i64);
 
     print!("?? {}", &last_version);
 
@@ -149,10 +147,7 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
     match sql {
         Ok(_) => return CliOutput::new("ok", &format!("{new_version}")),
         Err(e) => {
-            return CliOutput::new(
-                "err",
-                &format!("Error creating Asset Version : {:?} {}", e, q),
-            )
+            return CliOutput::new("err", &format!("Error creating Asset Version : {e:?} {q}"))
         }
     }
 }
@@ -182,7 +177,7 @@ pub async fn latest_version(
                 .unwrap_or(0);
             Ok(last_version)
         }
-        Err(e) => Err(format!("Error:{:?}", e)),
+        Err(e) => Err(format!("Error:{e:?}")),
     }
 }
 
@@ -207,9 +202,9 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         Ok(s) => {
             let version: Version = s.into();
             let source = version.source;
-            CliOutput::new("ok", &format!("source : {}", source))
+            CliOutput::new("ok", &format!("source : {source}"))
         }
-        Err(e) => CliOutput::new("err", &format!("Source not found: {:?} {}", e, q)),
+        Err(e) => CliOutput::new("err", &format!("Source not found: {e:?} {q}")),
     }
 }
 
@@ -236,7 +231,7 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         Ok(_) => CliOutput::new("ok", "version marked for purge"),
         Err(e) => CliOutput::new(
             "ok",
-            &format!("Error, could not mark asset for purge:{:?}", e),
+            &format!("Error, could not mark asset for purge:{e:?}"),
         ),
     }
 }
@@ -249,8 +244,8 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     }
     // get last version
     match latest_version(&mut connection, json.asset_id).await {
-        Ok(v) => CliOutput::new("ok", &format!("latest : {:?}", v)),
-        Err(e) => CliOutput::new("err", &format!("no version found: {:?}", e)),
+        Ok(v) => CliOutput::new("ok", &format!("latest : {v:?}")),
+        Err(e) => CliOutput::new("err", &format!("no version found: {e:?}")),
     }
 }
 
@@ -275,7 +270,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
     match sql {
         Ok(_) => (),
         Err(e) => {
-            return CliOutput::new("err", &format!("Error, could not approve version: {:?}", e))
+            return CliOutput::new("err", &format!("Error, could not approve version: {e:?}"))
         }
     }
 
@@ -296,15 +291,15 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
         depend = version.depend;
     }
 
-    let version_id_depends: Vec<&str> = depend.split(",").filter(|x| !x.is_empty()).collect();
+    let version_id_depends: Vec<&str> = depend.split(',').filter(|x| !x.is_empty()).collect();
 
     match version_id_depends.len() {
-        0 => return CliOutput::new("ok", "Asset approved, no dependencies"),
+        0 => CliOutput::new("ok", "Asset approved, no dependencies"),
         _ => {
             let d = approve_dependencies(connection, version_id_depends).await;
             match d {
                 Ok(_) => CliOutput::new("ok", "Asset and Dependencies approved"),
-                Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {:?}", e)),
+                Err(e) => CliOutput::new("err", &format!("Error approving dependencies: {e:?}")),
             }
         }
     }
