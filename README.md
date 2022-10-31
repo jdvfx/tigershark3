@@ -1,6 +1,6 @@
 # tigershark3
 
-Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD functions using SQLite3, Python3 (Houdini front-end) and Rust (back-end)
+Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD functions using SQLite3, Python3 (Houdini front-end) and Rust (back-end). Since it's CLI based, it can be used with any software, not just Houdini.
 
 - insert (create/update)
 - get_latest (latest version)
