@@ -51,7 +51,7 @@ fn now() -> String {
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id != 0 {
-        return create_version(connection, json).await;
+        create_version(connection, json).await
     } else {
         // asset_id doesn't exist, use name+location
         let q = format!(
@@ -94,21 +94,17 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                             // found the asset_id of the newly created asset
                             let asset: Asset = s.into();
                             json.asset_id = asset.asset_id;
-                            return create_version(connection, json).await;
+                            create_version(connection, json).await
                         }
-                        Err(e) => {
-                            return CliOutput::new("err", &format!("Couldn't find ID: {e:?}"))
-                        }
+                        Err(e) => CliOutput::new("err", &format!("Couldn't find ID: {e:?}")),
                     }
                 }
-                Err(e) => {
-                    return CliOutput::new("err", &format!("Error creating Asset : {e:?}"));
-                }
+                Err(e) => CliOutput::new("err", &format!("Error creating Asset : {e:?}")),
             }
         } else {
             let asset: Asset = sql.unwrap().into();
             json.asset_id = asset.asset_id;
-            return create_version(connection, json).await;
+            create_version(connection, json).await
         }
     }
 }
@@ -145,10 +141,8 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
-        Ok(_) => return CliOutput::new("ok", &format!("{new_version}")),
-        Err(e) => {
-            return CliOutput::new("err", &format!("Error creating Asset Version : {e:?} {q}"))
-        }
+        Ok(_) => CliOutput::new("ok", &format!("{new_version}")),
+        Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {e:?} {q}")),
     }
 }
 
