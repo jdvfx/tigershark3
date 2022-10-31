@@ -1,9 +1,6 @@
 # tigershark3
-tigershark v2 but moved from MongoDB to SQLITE3,
-and adding Assets creation as well as Show/Seq/Shot
 
-Tigershark3
-is a CLI based 3D asset version tracking tool with simple CRUD functions using SQLite
+Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD functions using SQLite3, Python3 (Houdini front-end) and Rust (back-end)
 
 - insert (create/update)
 - get_latest (latest version)
@@ -14,13 +11,13 @@ is a CLI based 3D asset version tracking tool with simple CRUD functions using S
 syntax:<br>
 
 > insert new asset<br>
-./tigershark2 -c insert -a '{"name":"my_asset","location":"myasset_location"}'
+./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location"}'
 
 > update asset<br>
-./tigershark2 -c insert -a '{"name":"my_asset","location":"myasset_location","datapath":"/data/myasset","source":"/sources/myasset_source"}'
+./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location","datapath":"/data/myasset","source":"/sources/myasset_source"}'
 
 > find latest version of an asset<br>
-./tigershark2 -c latest -a '{"name":"my_asset","location":"myasset_location"}'
+./tigershark3 -c latest -a '{"name":"my_asset","location":"myasset_location"}'
 
 > 2 SQLite tables (assets/versions)
 
