@@ -115,7 +115,7 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         .await
         .unwrap_or(0_i64);
 
-    print!("?? {}", &last_version);
+    // print!("?? {}", &last_version);
 
     let new_version: i64 = last_version + 1_i64;
     // add access date - last time the file got read (that can be updated every few days?)
@@ -137,11 +137,11 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         ct = now(),
     );
 
-    print!("?? {}", &q);
+    // print!("?? {}", &q);
 
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
-        Ok(_) => CliOutput::new("ok", &format!("{new_version}")),
+        Ok(s) => CliOutput::new("ok", &format!("{new_version} {s:?}")),
         Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {e:?} {q}")),
     }
 }
