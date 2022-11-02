@@ -101,17 +101,26 @@ class TigerShark:
 
     # tigershark -c insert
     def insert(self):
-        # pre-increment version to update datapath
-        self.increment_version()
+
+        asset = self.build_asset()
+        # get latest version from DB and increment version on hda UI
+        command = "latest"
+        output = self.ts(command,asset)
+        if output[0]==0:
+            v = output[1]
+            if v.isdigit():
+                self.node.parm("version").set(int(v)+1)
+        else:
+            return output
+
+        # backup houdini file
         source = self.backup_hip()
         asset = self.build_asset()
         asset["source"]=source
-
         depends = self.get_depends()
         asset["depend"]=depends
 
         command = "insert"
-
         output = self.ts(command,asset)
         return output
 
