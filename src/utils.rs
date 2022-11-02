@@ -140,19 +140,9 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
     let sql = sqlx::query(&q).execute(&mut connection).await;
     match sql {
         Ok(s) => {
-            // RETURNING statement, the hard way...
+            // return row_id which is version_id in this case
             let rowid = s.last_insert_rowid();
-            let q = format!("SELECT * FROM versions WHERE ROWID={rowid}");
-            let sql = sqlx::query(&q).fetch_one(&mut connection).await;
-            match sql {
-                Ok(s) => {
-                    let ver: Version = s.into();
-                    CliOutput::new("ok", &format!("{ver:?}"))
-                }
-                Err(e) => {
-                    CliOutput::new("err", &format!("Error, can get created version from ROWID: {e:?} {q}"))
-                }
-            }
+            CliOutput::new("ok", &format!("{rowid:?}"))
         }
         Err(e) => CliOutput::new("err", &format!("Error creating Asset Version : {e:?} {q}")),
     }
