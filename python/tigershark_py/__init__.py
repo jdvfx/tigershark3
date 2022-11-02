@@ -81,6 +81,24 @@ class TigerShark:
     # Latest
     # Approve
 
+    # houdini - get all dependend node's version_id
+    def get_depends(self):
+
+        self_version_id = self.node.evalParm("version_id")
+        depends = []
+        d = hou.hscript("opdepend -iIe "+self.node.path())
+        for i in d[0].split("\n"):
+            n = hou.node(i)
+            if n:
+                if n.type().name()=="subnet":
+                    try:
+                        v = n.evalParm("version_id")
+                        if v!= self_version_id:
+                            depends.append(str(v))
+                    except Exception:
+                        pass
+        return ",".join(depends)
+
     # tigershark -c insert
     def insert(self):
         # pre-increment version to update datapath
@@ -88,6 +106,10 @@ class TigerShark:
         source = self.backup_hip()
         asset = self.build_asset()
         asset["source"]=source
+
+        depends = self.get_depends()
+        asset["depend"]=depends
+
         command = "insert"
 
         output = self.ts(command,asset)
