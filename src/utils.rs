@@ -240,7 +240,7 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     }
     // get last version
     match latest_version(&mut connection, json.asset_id).await {
-        Ok(v) => CliOutput::new("ok", &format!("latest : {v:?}")),
+        Ok(v) => CliOutput::new("ok", &format!("{v:?}")),
         Err(e) => CliOutput::new("err", &format!("no version found: {e:?}")),
     }
 }
