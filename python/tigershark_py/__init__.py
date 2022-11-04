@@ -45,10 +45,10 @@ class TigerShark:
 
         return backupfile
 
-    # houdini
-    def increment_version(self):
-        version = self.node.parm("version")
-        version.set(version.eval()+1)
+    # houdini - NOPE!
+    # def increment_version(self):
+    #     version = self.node.parm("version")
+    #     version.set(version.eval()+1)
 
     # call rust executable, pass command and asset
     # return tuple with (ExitCode,Output)
@@ -111,7 +111,9 @@ class TigerShark:
             if v.isdigit():
                 self.node.parm("version").set(int(v)+1)
         else:
-            return output
+            # if version not found, then it's v0 
+            self.node.parm("version").set(1)
+            # return output
 
         # backup houdini file
         source = self.backup_hip()
