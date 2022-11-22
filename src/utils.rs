@@ -179,7 +179,7 @@ pub async fn latest_version(
 
 pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     //
-    mutate_json(&mut connection, &mut json).await;
+    find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput::new("err", "Error, could not find asset_id and version");
     }
@@ -206,7 +206,7 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
 pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     //
-    mutate_json(&mut connection, &mut json).await;
+    find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput::new("err", "Error, could not find asset_id and version");
     }
@@ -234,7 +234,7 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
 pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // get asset_id :  if json.asset.id is missing, use name+location or version_id to quiery it
-    mutate_json(&mut connection, &mut json).await;
+    find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 {
         return CliOutput::new("err", "Error, could not find asset_id");
     }
@@ -247,7 +247,7 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
 pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     //
-    mutate_json(&mut connection, &mut json).await;
+    find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput::new("err", "Error, could not find asset_id and version");
     }
@@ -325,7 +325,7 @@ async fn approve_dependencies(
     Ok(())
 }
 
-async fn mutate_json(connection: &mut PoolConnection<Sqlite>, json: &mut AssetJson) {
+async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json: &mut AssetJson) {
     let asset_id: i64 = json.asset_id;
     let version_id: i64 = json.version_id;
     // if no asset id found, get it from name+location or version_id
