@@ -40,10 +40,10 @@ pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
 //
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
-    let d = local.date();
-    let t = local.time();
-    let dt = d.and_time(t);
-    let now = dt.unwrap().format("%Y-%m-%d %H:%M:%S").to_string();
+    let date = local.date_naive();
+    let time = local.time();
+    let datetime = date.and_time(time);
+    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
     now
 }
 
