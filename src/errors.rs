@@ -1,40 +1,32 @@
 use std::process;
+use thiserror::Error;
 
 #[derive(Debug)]
-pub enum Status {
-    Err,
-    Ok,
-}
-#[derive(Debug)]
-pub struct CliOutput {
-    pub status: Status,
-    pub output: String,
-}
+pub struct CliOutput(pub Result<String, TigerSharkError>);
 
-impl CliOutput {
-    pub fn new(status: &str, output: &str) -> Self {
-        let status = match status {
-            "err" => Status::Err,
-            _ => Status::Ok,
-        };
-        CliOutput {
-            status,
-            output: output.to_owned(),
-        }
-    }
+#[derive(Error, Debug)]
+pub enum TigerSharkError {
+    #[error("CLI Error: `{0}`")]
+    CliError(String),
+    #[error("DB Error: `{0}`")]
+    DbError(String),
+    #[error("Not Found: `{0}`")]
+    NotFound(String),
+    #[error("unknown error")]
+    Unknown,
 }
 
 // exit the program with:
 // - a message
 // - an exitcode (101:error, 0:ok)
 pub fn exit_or_panic(cli_output: CliOutput) {
-    match cli_output.status {
-        Status::Ok => {
-            print!("{}", cli_output.output);
+    match cli_output.0 {
+        Ok(o) => {
+            print!("{:?}", o);
             process::exit(0);
         }
-        Status::Err => {
-            print!("{}", cli_output.output);
+        Err(e) => {
+            print!("{:?}", e);
             process::exit(101);
         }
     }

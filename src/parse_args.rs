@@ -97,10 +97,9 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let asset: JsonOption = match asset_result {
         Ok(a) => a,
         Err(r) => {
-            return Err(CliOutput::new(
-                "err",
-                &format!("Err: bad json format: {asset_str} : {r:?}"),
-            ))
+            return Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                format!("Err: bad json format: {asset_str} : {r:?}"),
+            ))));
         }
     };
     // to check if json values are present for the current command
@@ -131,7 +130,9 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 json: Some(asset_unwrapped),
                 extra_args: None,
             }),
-            _ => Err(CliOutput::new("err", "create : Asset missing some Keys")),
+            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                "insert : Asset missing some Keys".to_string(),
+            )))),
         },
         "source" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
             true => Ok(Command {
@@ -139,7 +140,9 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 json: Some(asset_unwrapped),
                 extra_args: None,
             }),
-            _ => Err(CliOutput::new("err", "source : Asset missing some Keys")),
+            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                "source : Asset missing some Keys".to_string(),
+            )))),
         },
         "delete" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
             true => Ok(Command {
@@ -147,7 +150,9 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 json: Some(asset_unwrapped),
                 extra_args: None,
             }),
-            _ => Err(CliOutput::new("err", "delete : Asset missing some Keys")),
+            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                "delete : Asset missing some Keys".to_string(),
+            )))),
         },
         "latest" => match a_name && a_location || a_asset_id {
             true => Ok(Command {
@@ -155,7 +160,9 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 json: Some(asset_unwrapped),
                 extra_args: None,
             }),
-            _ => Err(CliOutput::new("err", "latest : Asset missing some Keys")),
+            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                "latest : Asset missing some Keys".to_string(),
+            )))),
         },
         "approve" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
             true => Ok(Command {
@@ -163,8 +170,12 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 json: Some(asset_unwrapped),
                 extra_args: None,
             }),
-            _ => Err(CliOutput::new("err", "approve : Asset missing some Keys")),
+            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                "approve : Asset missing some Keys".to_string(),
+            )))),
         },
-        _ => Err(CliOutput::new("err", "invalid a command")),
+        _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+            "invalid command".to_string(),
+        )))),
     }
 }
