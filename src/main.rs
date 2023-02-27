@@ -1,9 +1,6 @@
-#![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
-
 use dotenv::dotenv;
-use std::env;
-
 use sqlx::sqlite::SqlitePoolOptions;
+use std::env;
 
 mod assetdef;
 pub mod errors;
@@ -31,32 +28,28 @@ async fn main() {
             let pool = SqlitePoolOptions::connect(options, &database_url)
                 .await
                 .unwrap();
+            // connect to DB
             let conn = pool.acquire().await;
-            // let conn = sqlite::SqliteConnection::connect(&db_name).await;
-            // connect to db, return a connection
             match conn {
                 Ok(conn) => {
-                    // Get asset json (eg: -a '{"name":"box",...}')
-                    let json = args.json;
-                    //
-                    // it's OK to unwrap() the json below,
-                    // it has been already checked in json_unwrap_or()
-                    //
-                    // Execute one of the commands
-                    cli_output = match args.command {
-                        CommandType::Insert => utils::insert(conn, json.unwrap()).await,
-                        CommandType::Source => utils::source(conn, json.unwrap()).await,
-                        CommandType::Delete => utils::delete(conn, json.unwrap()).await,
-                        CommandType::Latest => utils::latest(conn, json.unwrap()).await,
-                        CommandType::Approve => utils::approve(conn, json.unwrap()).await,
-                        CommandType::Purge => utils::purge(conn).await,
-                    };
+                    if let Some(json) = args.json {
+                        cli_output = match args.command {
+                            CommandType::Insert => utils::insert(conn, json).await,
+                            CommandType::Source => utils::source(conn, json).await,
+                            CommandType::Delete => utils::delete(conn, json).await,
+                            CommandType::Latest => utils::latest(conn, json).await,
+                            CommandType::Approve => utils::approve(conn, json).await,
+                            CommandType::Purge => utils::purge(conn).await,
+                        };
+                    } else {
+                        cli_output =
+                            CliOutput(Err(TigerSharkError::CliError(format!("json Error"))));
+                    }
                 }
                 Err(e) => {
-                    // TODO : create database if it doesn't exist
-                    cli_output = CliOutput(Err(TigerSharkError::DbError(
-                        "connection error".to_string(),
-                    )));
+                    cli_output = CliOutput(Err(TigerSharkError::DbError(format!(
+                        "connection error: {e}"
+                    ))));
                 }
             }
         }
@@ -66,7 +59,5 @@ async fn main() {
             ))))
         }
     }
-
-    // let cli_out = CliOutput(Ok("GOOD".to_string()));
     exit_or_panic(cli_output);
 }

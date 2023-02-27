@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub use crate::assetdef::Asset;
 use crate::errors::CliOutput;
 
-#[derive(Debug)]
+#[derive(clap::ValueEnum, Clone, Debug)]
 pub enum CommandType {
     Insert,
     Source,
@@ -26,8 +26,8 @@ pub struct Command {
 #[clap(author="Julien D.", version, about, long_about = None)]
 struct Args {
     /// CRUD command
-    #[clap(short, long, value_parser)]
-    command: String,
+    #[clap(short, long, value_enum)]
+    command: CommandType,
 
     /// json string representing the asset
     #[clap(short, long, value_parser)]
@@ -116,45 +116,51 @@ pub fn get_args() -> Result<Command, CliOutput> {
 
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
-    match args.command.as_str() {
-        "purge" => Ok(Command {
+    match args.command {
+        CommandType::Purge => Ok(Command {
             command: CommandType::Purge,
             json: None,
             extra_args: None,
         }),
-        "insert" => match (a_name && a_location) || (a_asset_id && a_datapath && a_source) {
-            // source and datapath are optional => update asset
-            // otherwize, just create a new asset if needed
-            true => Ok(Command {
-                command: CommandType::Insert,
-                json: Some(asset_unwrapped),
-                extra_args: None,
-            }),
-            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-                "insert : Asset missing some Keys".to_string(),
-            )))),
-        },
-        "source" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
-            true => Ok(Command {
-                command: CommandType::Source,
-                json: Some(asset_unwrapped),
-                extra_args: None,
-            }),
-            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-                "source : Asset missing some Keys".to_string(),
-            )))),
-        },
-        "delete" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
-            true => Ok(Command {
-                command: CommandType::Delete,
-                json: Some(asset_unwrapped),
-                extra_args: None,
-            }),
-            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-                "delete : Asset missing some Keys".to_string(),
-            )))),
-        },
-        "latest" => match a_name && a_location || a_asset_id {
+        CommandType::Insert => {
+            match (a_name && a_location) || (a_asset_id && a_datapath && a_source) {
+                // source and datapath are optional => update asset
+                // otherwize, just create a new asset if needed
+                true => Ok(Command {
+                    command: CommandType::Insert,
+                    json: Some(asset_unwrapped),
+                    extra_args: None,
+                }),
+                _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                    "insert : Asset missing some Keys".to_string(),
+                )))),
+            }
+        }
+        CommandType::Source => {
+            match (a_name && a_location || a_asset_id) && a_version || a_version_id {
+                true => Ok(Command {
+                    command: CommandType::Source,
+                    json: Some(asset_unwrapped),
+                    extra_args: None,
+                }),
+                _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                    "source : Asset missing some Keys".to_string(),
+                )))),
+            }
+        }
+        CommandType::Delete => {
+            match (a_name && a_location || a_asset_id) && a_version || a_version_id {
+                true => Ok(Command {
+                    command: CommandType::Delete,
+                    json: Some(asset_unwrapped),
+                    extra_args: None,
+                }),
+                _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                    "delete : Asset missing some Keys".to_string(),
+                )))),
+            }
+        }
+        CommandType::Latest => match a_name && a_location || a_asset_id {
             true => Ok(Command {
                 command: CommandType::Latest,
                 json: Some(asset_unwrapped),
@@ -164,18 +170,17 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 "latest : Asset missing some Keys".to_string(),
             )))),
         },
-        "approve" => match (a_name && a_location || a_asset_id) && a_version || a_version_id {
-            true => Ok(Command {
-                command: CommandType::Approve,
-                json: Some(asset_unwrapped),
-                extra_args: None,
-            }),
-            _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-                "approve : Asset missing some Keys".to_string(),
-            )))),
-        },
-        _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-            "invalid command".to_string(),
-        )))),
+        CommandType::Approve => {
+            match (a_name && a_location || a_asset_id) && a_version || a_version_id {
+                true => Ok(Command {
+                    command: CommandType::Approve,
+                    json: Some(asset_unwrapped),
+                    extra_args: None,
+                }),
+                _ => Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                    "approve : Asset missing some Keys".to_string(),
+                )))),
+            }
+        }
     }
 }

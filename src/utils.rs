@@ -4,50 +4,6 @@ use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
-pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
-    // find asset for purge
-    let q = "
-            SELECT * FROM versions
-            WHERE status=2;
-        "
-    .to_string();
-    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
-
-    match sql {
-        Ok(sql) => {
-            let versions_to_purge: Vec<String> = sql
-                .iter()
-                .map(|r| r.into())
-                .collect::<Vec<Version>>()
-                .iter()
-                .map(|r| r.datapath.clone())
-                .collect::<Vec<String>>();
-
-            let mut s: String = String::from("");
-            for i in versions_to_purge.iter() {
-                s.push_str(i);
-                s.push('#');
-            }
-            CliOutput(Ok(format!("{s:?}")))
-        }
-        Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
-            "Cannot access versions to purge {e:?}"
-        )))),
-    }
-}
-
-// pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
-//     CliOutput::new("ok", &format!("test good , {:?}", connection))
-// }
-//
-fn now() -> String {
-    let local: DateTime<Local> = Local::now();
-    let date = local.date_naive();
-    let time = local.time();
-    let datetime = date.and_time(time);
-    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
-    now
-}
 
 // first, let's find out if the asset exists
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
@@ -382,4 +338,49 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
             }
         }
     }
+}
+
+pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
+    // find asset for purge
+    let q = "
+            SELECT * FROM versions
+            WHERE status=2;
+        "
+    .to_string();
+    let sql = sqlx::query(&q).fetch_all(&mut connection).await;
+
+    match sql {
+        Ok(sql) => {
+            let versions_to_purge: Vec<String> = sql
+                .iter()
+                .map(|r| r.into())
+                .collect::<Vec<Version>>()
+                .iter()
+                .map(|r| r.datapath.clone())
+                .collect::<Vec<String>>();
+
+            let mut s: String = String::from("");
+            for i in versions_to_purge.iter() {
+                s.push_str(i);
+                s.push('#');
+            }
+            CliOutput(Ok(format!("{s:?}")))
+        }
+        Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
+            "Cannot access versions to purge {e:?}"
+        )))),
+    }
+}
+
+// pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
+//     CliOutput::new("ok", &format!("test good , {:?}", connection))
+// }
+//
+fn now() -> String {
+    let local: DateTime<Local> = Local::now();
+    let date = local.date_naive();
+    let time = local.time();
+    let datetime = date.and_time(time);
+    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+    now
 }
