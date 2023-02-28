@@ -38,22 +38,6 @@ impl From<&SqliteRow> for Version {
     }
 }
 
-impl From<SqliteRow> for Version {
-    fn from(val: SqliteRow) -> Self {
-        Version {
-            asset_id: val.try_get("asset_id").unwrap_or(0),
-            version_id: val.try_get("asset_id").unwrap_or(0),
-            version: val.try_get("version").unwrap_or(0_i64),
-            source: val.try_get("source").unwrap_or_else(|_| "".to_string()),
-            datapath: val.try_get("datapath").unwrap_or_else(|_| "".to_string()),
-            depend: val.try_get("depend").unwrap_or_else(|_| "".to_string()),
-            approved: val.try_get("approved").unwrap_or(0),
-            status: val.try_get("status").unwrap_or(0),
-            ctime: val.try_get("ctime").unwrap_or_else(|_| "".to_string()),
-            atime: val.try_get("atime").unwrap_or_else(|_| "".to_string()),
-        }
-    }
-}
 // --------------------------------------------
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Asset {

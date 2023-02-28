@@ -162,8 +162,8 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 
     match sql {
         Ok(s) => {
-            let version: Version = s.into();
-            let source = version.source;
+            let version: &Version = &(&s).into();
+            let source = &version.source;
             CliOutput(Ok(format!("source : {source}")))
         }
         Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
@@ -260,8 +260,8 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
 
     let mut depend = "".to_string();
     if sql.is_ok() {
-        let version: Version = sql.unwrap().into();
-        depend = version.depend;
+        let version: &Version = &(&sql.unwrap()).into();
+        depend = version.clone().depend;
     }
 
     let version_id_depends: Vec<&str> = depend.split(',').filter(|x| !x.is_empty()).collect();
@@ -331,7 +331,7 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
             );
             let sql = sqlx::query(&q).fetch_one(connection).await;
             if sql.is_ok() {
-                let version: Version = sql.unwrap().into();
+                let version: &Version = &(&sql.unwrap()).into();
                 json.asset_id = version.asset_id;
                 // version might be provided by the user, or not, just get it.
                 json.version = version.version;
