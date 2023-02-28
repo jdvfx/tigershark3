@@ -1,4 +1,4 @@
-use crate::assetdef::Version;
+use crate::assetdef::{Status, Version};
 use crate::errors::{CliOutput, TigerSharkError};
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
@@ -95,7 +95,7 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         da = json.datapath,
         de = json.depend,
         ap = 0,
-        st = 1,
+        st = Status::Online as u8,
         ct = now(),
     );
 
@@ -184,9 +184,10 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     let q = format!(
         "
             UPDATE versions
-            SET status = 2
+            SET status = {st}
             WHERE asset_id = {ass} AND version = {ve};
         ",
+        st = Status::Purge as u8,
         ass = json.asset_id,
         ve = json.version,
     );
@@ -342,11 +343,13 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
 
 pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     // find asset for purge
-    let q = "
-            SELECT * FROM versions
-            WHERE status=2;
+    let q = format!(
         "
-    .to_string();
+            SELECT * FROM versions
+            WHERE status='{st}';
+        ",
+        st = Status::Purge as u8
+    );
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;
 
     match sql {

@@ -1,11 +1,35 @@
 use sqlx::sqlite::SqliteRow;
 use sqlx::Row;
 
-// status
-// 0 : status not set (null)
-// 1 : online
-// 2 : purge
-// 3 : deleted
+#[derive(sqlx::FromRow, Debug, Clone, Default)]
+pub struct Asset {
+    pub asset_id: i64,
+    pub name: String,
+    pub location: String,
+}
+
+impl From<SqliteRow> for Asset {
+    fn from(val: SqliteRow) -> Self {
+        Asset {
+            asset_id: val.try_get("asset_id").unwrap_or_default(),
+            name: val.try_get("name").unwrap_or_default(),
+            location: val.try_get("location").unwrap_or_default(),
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub enum Status {
+    NotSet = 0,
+    Online = 1,
+    Purge = 2,
+    Deleted = 3,
+}
+impl Default for Status {
+    fn default() -> Self {
+        Status::NotSet
+    }
+}
 
 #[derive(sqlx::FromRow, Debug, Clone, Default)]
 pub struct Version {
@@ -34,24 +58,6 @@ impl From<&SqliteRow> for Version {
             status: row.try_get("status").unwrap_or_default(),
             ctime: row.try_get("ctime").unwrap_or_default(),
             atime: row.try_get("atime").unwrap_or_default(),
-        }
-    }
-}
-
-// --------------------------------------------
-#[derive(sqlx::FromRow, Debug, Clone, Default)]
-pub struct Asset {
-    pub asset_id: i64,
-    pub name: String,
-    pub location: String,
-}
-
-impl From<SqliteRow> for Asset {
-    fn from(val: SqliteRow) -> Self {
-        Asset {
-            asset_id: val.try_get("asset_id").unwrap_or_default(),
-            name: val.try_get("name").unwrap_or_default(),
-            location: val.try_get("location").unwrap_or_default(),
         }
     }
 }
