@@ -13,10 +13,8 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     } else {
         // asset_id doesn't exist, use name+location
         let q = format!(
-            "
-                SELECT * FROM assets
-                WHERE name='{na}' AND location='{lo}';
-            ",
+            "   SELECT * FROM assets
+                WHERE name='{na}' AND location='{lo}';",
             na = json.name,
             lo = json.location,
         );
@@ -25,10 +23,8 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
         if sql.is_err() {
             // asset ID not found, create a new asset
             let sql2 = sqlx::query(&format!(
-                "
-                    INSERT INTO assets
-                    ('name','location') VALUES ('{}','{}');
-                ",
+                "   INSERT INTO assets
+                    ('name','location') VALUES ('{}','{}');",
                 json.name, json.location
             ))
             .execute(&mut connection)
@@ -38,10 +34,8 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
                     // new asset created
                     // let's find out its asset_id
                     let sql3 = sqlx::query(&format!(
-                        "
-                            SELECT * FROM assets
-                            WHERE name='{na}' AND location='{lo}'; 
-                        ",
+                        "   SELECT * FROM assets
+                            WHERE name='{na}' AND location='{lo}';",
                         na = json.name,
                         lo = json.location,
                     ))
@@ -84,11 +78,9 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
     // don't want to update access date every single time it's accessed - too much for DB
 
     let q = format!(
-        "
-            INSERT INTO versions
+        "   INSERT INTO versions
             ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
-            VALUES ('{ass}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}','{ct}');
-        ",
+            VALUES ('{ass}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}','{ct}');",
         ass = json.asset_id,
         ve = new_version,
         so = json.source,
@@ -117,10 +109,8 @@ pub async fn latest_version(
     asset_id: i64,
 ) -> Result<i64, String> {
     let sql = sqlx::query(&format!(
-        "
-            SELECT version FROM versions WHERE asset_id='{}';
-        ",
-        &asset_id,
+        "SELECT version FROM versions WHERE asset_id='{}';",
+        asset_id,
     ))
     .fetch_all(connection)
     .await;
@@ -151,9 +141,7 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     }
 
     let q = format!(
-        "
-            SELECT source FROM versions WHERE asset_id='{ass}' AND version='{ve}';
-        ",
+        "   SELECT source FROM versions WHERE asset_id='{ass}' AND version='{ve}';",
         ass = json.asset_id,
         ve = json.version,
     );
@@ -182,11 +170,9 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     }
 
     let q = format!(
-        "
-            UPDATE versions
+        "   UPDATE versions
             SET status = {st}
-            WHERE asset_id = {ass} AND version = {ve};
-        ",
+            WHERE asset_id = {ass} AND version = {ve};",
         st = Status::Purge as u8,
         ass = json.asset_id,
         ve = json.version,
@@ -229,11 +215,9 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
     }
 
     let q = format!(
-        "
-            UPDATE versions
+        "   UPDATE versions
             SET approved = 1
-            WHERE asset_id = {ass} AND version = {ve};
-        ",
+            WHERE asset_id = {ass} AND version = {ve};",
         ass = json.asset_id,
         ve = json.version,
     );
@@ -250,9 +234,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
 
     // approve dependencies
     let q = format!(
-        "
-            SELECT depend FROM versions WHERE asset_id='{ass}' AND version='{ve}';
-        ",
+        "   SELECT depend FROM versions WHERE asset_id='{ass}' AND version='{ve}';",
         ass = json.asset_id,
         ve = json.version,
     );
@@ -312,9 +294,7 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
     if asset_id == 0_i64 {
         if version_id == 0_i64 {
             let q = format!(
-                "
-                    SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';
-                    ",
+                "   SELECT asset_id FROM assets WHERE name='{na}' AND location='{lo}';",
                 na = json.name,
                 lo = json.location,
             );
@@ -325,9 +305,7 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
             }
         } else {
             let q = format!(
-                "
-                    SELECT asset_id,version FROM versions WHERE version_id='{ve}';
-                    ",
+                "   SELECT asset_id,version FROM versions WHERE version_id='{ve}';",
                 ve = version_id
             );
             let sql = sqlx::query(&q).fetch_one(connection).await;
@@ -344,10 +322,8 @@ async fn find_asset_id_and_version(connection: &mut PoolConnection<Sqlite>, json
 pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     // find asset for purge
     let q = format!(
-        "
-            SELECT * FROM versions
-            WHERE status='{st}';
-        ",
+        "   SELECT * FROM versions
+            WHERE status='{st}';",
         st = Status::Purge as u8
     );
     let sql = sqlx::query(&q).fetch_all(&mut connection).await;

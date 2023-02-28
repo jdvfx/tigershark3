@@ -28,11 +28,9 @@ struct Args {
     /// CRUD command
     #[clap(short, long, value_enum)]
     command: CommandType,
-
-    /// json string representing the asset
+    /// Json string representing the asset
     #[clap(short, long, value_parser)]
     asset: Option<String>,
-
     /// extra args to some commands
     #[clap(short, long, value_parser)]
     extra_args: Option<String>,
@@ -53,7 +51,7 @@ struct JsonOption {
     pub status: Option<u8>,
 }
 // the asset json that gets passed to the CRUD function
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AssetJson {
     pub asset_id: i64,
     pub name: String,
@@ -70,16 +68,16 @@ pub struct AssetJson {
 // removes the need for unwrap() when executing CRUD commands
 fn json_unwrap_or(json_o: JsonOption) -> AssetJson {
     AssetJson {
-        asset_id: json_o.asset_id.unwrap_or(0),
-        name: json_o.name.unwrap_or_else(|| "".to_owned()),
-        location: json_o.location.unwrap_or_else(|| "".to_owned()),
-        version_id: json_o.version_id.unwrap_or(0),
-        version: json_o.version.unwrap_or(0),
-        source: json_o.source.unwrap_or_else(|| "".to_owned()),
-        datapath: json_o.datapath.unwrap_or_else(|| "".to_owned()),
-        depend: json_o.depend.unwrap_or_else(|| "".to_owned()),
-        approved: json_o.approved.unwrap_or(0),
-        status: json_o.status.unwrap_or(0),
+        asset_id: json_o.asset_id.unwrap_or_default(),
+        name: json_o.name.unwrap_or_default(),
+        location: json_o.location.unwrap_or_default(),
+        version_id: json_o.version_id.unwrap_or_default(),
+        version: json_o.version.unwrap_or_default(),
+        source: json_o.source.unwrap_or_default(),
+        datapath: json_o.datapath.unwrap_or_default(),
+        depend: json_o.depend.unwrap_or_default(),
+        approved: json_o.approved.unwrap_or_default(),
+        status: json_o.status.unwrap_or_default(),
     }
 }
 
@@ -92,13 +90,11 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above
     let asset_str = args.asset.unwrap_or_else(|| "{}".to_string());
-    let asset_result: serde_json::Result<JsonOption> = serde_json::from_str(&asset_str);
-
-    let asset: JsonOption = match asset_result {
+    let asset: JsonOption = match serde_json::from_str(&asset_str) {
         Ok(a) => a,
         Err(r) => {
             return Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
-                format!("Err: bad json format: {asset_str} : {r:?}"),
+                format!("Bad Json format: {asset_str} : {r:?}"),
             ))));
         }
     };
