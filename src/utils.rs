@@ -8,7 +8,7 @@ use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 // first, let's find out if the asset exists
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
-    if json.asset_id != 0 {
+    if json.asset_id == 0 {
         create_version(connection, json).await
     } else {
         // asset_id doesn't exist, use name+location

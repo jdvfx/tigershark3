@@ -43,7 +43,7 @@ async fn main() {
                         };
                     } else {
                         cli_output =
-                            CliOutput(Err(TigerSharkError::CliError(format!("json Error"))));
+                            CliOutput(Err(TigerSharkError::CliError("json Error".to_string())));
                     }
                 }
                 Err(e) => {

@@ -20,6 +20,7 @@ pub struct Version {
     pub ctime: String,
     pub atime: String,
 }
+
 impl From<&SqliteRow> for Version {
     fn from(row: &SqliteRow) -> Version {
         Version {
@@ -59,15 +60,6 @@ pub struct Asset {
     pub asset_id: i64,
     pub name: String,
     pub location: String,
-}
-impl From<&SqliteRow> for Asset {
-    fn from(row: &SqliteRow) -> Asset {
-        Asset {
-            asset_id: row.try_get("asset_id").unwrap_or(0_i64),
-            name: row.try_get("name").unwrap_or_else(|_| "".to_string()),
-            location: row.try_get("location").unwrap_or_else(|_| "".to_string()),
-        }
-    }
 }
 
 impl From<SqliteRow> for Asset {
