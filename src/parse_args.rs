@@ -66,18 +66,20 @@ pub struct AssetJson {
 }
 // create default empty values if missing
 // removes the need for unwrap() when executing CRUD commands
-fn json_unwrap_or(json_o: JsonOption) -> AssetJson {
-    AssetJson {
-        asset_id: json_o.asset_id.unwrap_or_default(),
-        name: json_o.name.unwrap_or_default(),
-        location: json_o.location.unwrap_or_default(),
-        version_id: json_o.version_id.unwrap_or_default(),
-        version: json_o.version.unwrap_or_default(),
-        source: json_o.source.unwrap_or_default(),
-        datapath: json_o.datapath.unwrap_or_default(),
-        depend: json_o.depend.unwrap_or_default(),
-        approved: json_o.approved.unwrap_or_default(),
-        status: json_o.status.unwrap_or_default(),
+impl From<JsonOption> for AssetJson {
+    fn from(json_o: JsonOption) -> AssetJson {
+        AssetJson {
+            asset_id: json_o.asset_id.unwrap_or_default(),
+            name: json_o.name.unwrap_or_default(),
+            location: json_o.location.unwrap_or_default(),
+            version_id: json_o.version_id.unwrap_or_default(),
+            version: json_o.version.unwrap_or_default(),
+            source: json_o.source.unwrap_or_default(),
+            datapath: json_o.datapath.unwrap_or_default(),
+            depend: json_o.depend.unwrap_or_default(),
+            approved: json_o.approved.unwrap_or_default(),
+            status: json_o.status.unwrap_or_default(),
+        }
     }
 }
 
@@ -108,7 +110,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let a_source = asset.source.is_some();
 
     // unpack JsonOption into JsonString
-    let asset_unwrapped: AssetJson = json_unwrap_or(asset);
+    let asset_unwrapped: AssetJson = asset.into();
 
     // >>> COMMAND <<<
     // for each command, checks that the correct json values are present
