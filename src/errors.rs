@@ -12,6 +12,8 @@ pub enum TigerSharkError {
     DbError(String),
     #[error("Not Found: `{0}`")]
     NotFound(String),
+    #[error("Some Asset keys missing for command `{0}`: `{1}`")]
+    AssetKeysError(String, String),
     #[error("unknown error")]
     Unknown,
 }

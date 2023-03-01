@@ -5,7 +5,6 @@ use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
 
-// first, let's find out if the asset exists
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
     // first, let's find out if the asset exists
     if json.asset_id == 0 {
@@ -24,8 +23,9 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
             // asset ID not found, create a new asset
             let sql2 = sqlx::query(&format!(
                 "   INSERT INTO assets
-                    ('name','location') VALUES ('{}','{}');",
-                json.name, json.location
+                    ('name','location') VALUES ('{na}','{lo}');",
+                na = json.name,
+                lo = json.location,
             ))
             .execute(&mut connection)
             .await;
@@ -70,18 +70,17 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
     let last_version: i64 = latest_version(&mut connection, json.asset_id)
         .await
         .unwrap_or(0_i64);
-
-    // print!("?? {}", &last_version);
-
+    // ignore error and create v1
     let new_version: i64 = last_version + 1_i64;
+
     // add access date - last time the file got read (that can be updated every few days?)
     // don't want to update access date every single time it's accessed - too much for DB
 
     let q = format!(
         "   INSERT INTO versions
             ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
-            VALUES ('{ass}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}','{ct}');",
-        ass = json.asset_id,
+            VALUES ('{id}','{ve}','{so}','{da}','{de}','{ap}','{st}','{ct}','{ct}');",
+        id = json.asset_id,
         ve = new_version,
         so = json.source,
         da = json.datapath,
@@ -172,9 +171,9 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     let q = format!(
         "   UPDATE versions
             SET status = {st}
-            WHERE asset_id = {ass} AND version = {ve};",
+            WHERE asset_id = {id} AND version = {ve};",
         st = Status::Purge as u8,
-        ass = json.asset_id,
+        id = json.asset_id,
         ve = json.version,
     );
 
@@ -217,8 +216,8 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
     let q = format!(
         "   UPDATE versions
             SET approved = 1
-            WHERE asset_id = {ass} AND version = {ve};",
-        ass = json.asset_id,
+            WHERE asset_id = {id} AND version = {ve};",
+        id = json.asset_id,
         ve = json.version,
     );
 
@@ -234,8 +233,8 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
 
     // approve dependencies
     let q = format!(
-        "   SELECT depend FROM versions WHERE asset_id='{ass}' AND version='{ve}';",
-        ass = json.asset_id,
+        "   SELECT depend FROM versions WHERE asset_id='{id}' AND version='{ve}';",
+        id = json.asset_id,
         ve = json.version,
     );
 
@@ -273,11 +272,9 @@ async fn approve_dependencies(
 
     for version_id in version_id_depends {
         sqlx::query(&format!(
-            "
-                UPDATE versions
+            "   UPDATE versions
                 SET approved = 1
-                WHERE version_id = {};
-            ",
+                WHERE version_id = {};",
             version_id
         ))
         .execute(&mut tx)
@@ -351,10 +348,6 @@ pub async fn purge(mut connection: PoolConnection<Sqlite>) -> CliOutput {
     }
 }
 
-// pub async fn test(connection: PoolConnection<Sqlite>) -> CliOutput {
-//     CliOutput::new("ok", &format!("test good , {:?}", connection))
-// }
-//
 fn now() -> String {
     let local: DateTime<Local> = Local::now();
     let date = local.date_naive();

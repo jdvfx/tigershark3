@@ -8,6 +8,7 @@ pub struct Asset {
     pub location: String,
 }
 
+// Sqlite results into Asset
 impl From<SqliteRow> for Asset {
     fn from(val: SqliteRow) -> Self {
         Asset {
@@ -45,6 +46,7 @@ pub struct Version {
     pub atime: String,
 }
 
+// Sqlite results into Version
 impl From<&SqliteRow> for Version {
     fn from(row: &SqliteRow) -> Version {
         Version {
