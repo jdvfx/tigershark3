@@ -8,7 +8,7 @@ pub mod utils;
 
 pub mod parse_args;
 use errors::{exit_or_panic, CliOutput, TigerSharkError};
-use parse_args::{AssetJson, CommandType};
+use parse_args::CommandType;
 
 #[tokio::main]
 async fn main() {
@@ -25,9 +25,9 @@ async fn main() {
             let options = SqlitePoolOptions::new().max_connections(5);
             let pool = SqlitePoolOptions::connect(options, &database_url).await;
             if pool.is_err() {
-                let cli_output = CliOutput(Err(TigerSharkError::DbError(format!(
-                    "Could not connect to database"
-                ))));
+                let cli_output = CliOutput(Err(TigerSharkError::DbError(
+                    "Could not connect to database".to_string(),
+                )));
                 exit_or_panic(cli_output);
             }
 
