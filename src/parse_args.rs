@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub use crate::assetdef::Asset;
 use crate::errors::CliOutput;
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(clap::ValueEnum, Clone, Debug, PartialEq)]
 pub enum CommandType {
     Insert,
     Source,
@@ -22,18 +22,18 @@ pub struct Command {
 }
 
 /// Parse Command and Asset(json) arguments
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, PartialEq)]
 #[clap(author="Julien D.", version, about, long_about = None)]
-struct Args {
+pub struct Args {
     /// CRUD command
     #[clap(short, long, value_enum)]
-    command: CommandType,
+    pub command: CommandType,
     /// Json string representing the asset
     #[clap(short, long, value_parser)]
-    asset: Option<String>,
+    pub asset: Option<String>,
     /// extra args to some commands
     #[clap(short, long, value_parser)]
-    extra_args: Option<String>,
+    pub extra_args: Option<String>,
 }
 
 // serialized by Serde (could have missing fields: Options)
@@ -82,10 +82,20 @@ impl From<JsonOption> for AssetJson {
     }
 }
 
-// pub fn get_args() -> Option<Command> {
 pub fn get_args() -> Result<Command, CliOutput> {
     //
     let args = Args::parse();
+    // check that asset exists for all commands except Purge
+    match args.command {
+        CommandType::Purge => (),
+        _ => {
+            if args.asset.is_none() {
+                return Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
+                    format!("Requires Asset for function: {:?}", args.command),
+                ))));
+            }
+        }
+    }
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above

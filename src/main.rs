@@ -23,28 +23,28 @@ async fn main() {
     match args {
         Ok(args) => {
             //
-            // not sure about the syntax there... why using SqlitePoolOptions twice, that's dumb.
             let options = SqlitePoolOptions::new().max_connections(5);
-            let pool = SqlitePoolOptions::connect(options, &database_url)
-                .await
-                .unwrap();
+            let pool = SqlitePoolOptions::connect(options, &database_url).await;
+            if pool.is_err() {
+                let cli_output = CliOutput(Err(TigerSharkError::DbError(format!(
+                    "Could not connect to database"
+                ))));
+                exit_or_panic(cli_output);
+            }
+
             // connect to DB
-            let conn = pool.acquire().await;
+            let conn = pool.unwrap().acquire().await;
             match conn {
                 Ok(conn) => {
-                    if let Some(json) = args.json {
-                        cli_output = match args.command {
-                            CommandType::Insert => utils::insert(conn, json).await,
-                            CommandType::Source => utils::source(conn, json).await,
-                            CommandType::Delete => utils::delete(conn, json).await,
-                            CommandType::Latest => utils::latest(conn, json).await,
-                            CommandType::Approve => utils::approve(conn, json).await,
-                            CommandType::Purge => utils::purge(conn).await,
-                        };
-                    } else {
-                        cli_output =
-                            CliOutput(Err(TigerSharkError::CliError("json Error".to_string())));
-                    }
+                    let json = args.json.unwrap();
+                    cli_output = match args.command {
+                        CommandType::Insert => utils::insert(conn, json).await,
+                        CommandType::Source => utils::source(conn, json).await,
+                        CommandType::Delete => utils::delete(conn, json).await,
+                        CommandType::Latest => utils::latest(conn, json).await,
+                        CommandType::Approve => utils::approve(conn, json).await,
+                        CommandType::Purge => utils::purge(conn).await,
+                    };
                 }
                 Err(e) => {
                     cli_output = CliOutput(Err(TigerSharkError::DbError(format!(
