@@ -16,7 +16,6 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    // let cli_output: CliOutput;
     let cli_output: CliOutput;
     // parse args
     let args = parse_args::get_args();
