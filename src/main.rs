@@ -8,7 +8,7 @@ pub mod utils;
 
 pub mod parse_args;
 use errors::{exit_or_panic, CliOutput, TigerSharkError};
-use parse_args::CommandType;
+use parse_args::{AssetJson, CommandType};
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +35,7 @@ async fn main() {
             let conn = pool.unwrap().acquire().await;
             match conn {
                 Ok(conn) => {
-                    let json = args.json.unwrap();
+                    let json = args.json.unwrap_or_default();
                     cli_output = match args.command {
                         CommandType::Insert => utils::insert(conn, json).await,
                         CommandType::Source => utils::source(conn, json).await,
