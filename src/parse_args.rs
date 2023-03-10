@@ -99,7 +99,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above
-    let asset_str = args.asset.unwrap_or_else(|| "{}".to_string());
+    let asset_str = args.asset.unwrap_or_else(|| "{}".to_owned());
     let asset_option: JsonOption = match serde_json::from_str(&asset_str) {
         Ok(a) => a,
         Err(r) => {
@@ -122,7 +122,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
 
     fn keys_err(command: &str, asset: AssetJson) -> CliOutput {
         CliOutput(Err(crate::errors::TigerSharkError::AssetKeysError(
-            command.to_string(),
+            command.to_owned(),
             format!("{:?}", asset),
         )))
     }

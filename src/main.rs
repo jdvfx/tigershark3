@@ -26,7 +26,7 @@ async fn main() {
             let pool = SqlitePoolOptions::connect(options, &database_url).await;
             if pool.is_err() {
                 let cli_output = CliOutput(Err(TigerSharkError::DbError(
-                    "Could not connect to database".to_string(),
+                    "Could not connect to database".to_owned(),
                 )));
                 exit_or_panic(cli_output);
             }

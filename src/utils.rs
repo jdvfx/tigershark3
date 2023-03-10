@@ -135,7 +135,7 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput(Err(TigerSharkError::NotFound(
-            "could not find asset_id and version".to_string(),
+            "could not find asset_id and version".to_owned(),
         )));
     }
 
@@ -164,7 +164,7 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput(Err(TigerSharkError::NotFound(
-            "could not find asset_id and version".to_string(),
+            "could not find asset_id and version".to_owned(),
         )));
     }
 
@@ -180,7 +180,7 @@ pub async fn delete(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     let sql = sqlx::query(&q).execute(&mut connection).await;
 
     match sql {
-        Ok(_) => CliOutput(Ok("version marked for purge".to_string())),
+        Ok(_) => CliOutput(Ok("version marked for purge".to_owned())),
         Err(e) => CliOutput(Err(TigerSharkError::DbError(format!(
             "Error, could not mark asset for purge:{e:?}"
         )))),
@@ -192,7 +192,7 @@ pub async fn latest(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 {
         return CliOutput(Err(TigerSharkError::NotFound(
-            "Error, could not find asset_id".to_string(),
+            "Error, could not find asset_id".to_owned(),
         )));
     }
     // get last version
@@ -209,7 +209,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
     find_asset_id_and_version(&mut connection, &mut json).await;
     if json.asset_id == 0_i64 || json.version == 0_i64 {
         return CliOutput(Err(TigerSharkError::NotFound(
-            "Error, could not find asset_id and version".to_string(),
+            "Error, could not find asset_id and version".to_owned(),
         )));
     }
 
@@ -240,7 +240,7 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
 
     let sql = sqlx::query(&q).fetch_one(&mut connection).await;
 
-    let mut depend = "".to_string();
+    let mut depend = "".to_owned();
     if sql.is_ok() {
         let version: &Version = &(&sql.unwrap()).into();
         depend = version.clone().depend;
@@ -249,11 +249,11 @@ pub async fn approve(mut connection: PoolConnection<Sqlite>, mut json: AssetJson
     let version_id_depends: Vec<&str> = depend.split(',').filter(|x| !x.is_empty()).collect();
 
     match version_id_depends.len() {
-        0 => CliOutput(Ok("Asset approved, no dependencies".to_string())),
+        0 => CliOutput(Ok("Asset approved, no dependencies".to_owned())),
         _ => {
             let d = approve_dependencies(connection, version_id_depends).await;
             match d {
-                Ok(_) => CliOutput(Ok("Asset and Dependencies approved".to_string())),
+                Ok(_) => CliOutput(Ok("Asset and Dependencies approved".to_owned())),
                 Err(e) => CliOutput(Err(TigerSharkError::DbError(format!(
                     "Error approving dependencies: {e:?}"
                 )))),
@@ -353,6 +353,6 @@ fn now() -> String {
     let date = local.date_naive();
     let time = local.time();
     let datetime = date.and_time(time);
-    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_owned();
     now
 }
