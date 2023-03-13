@@ -353,6 +353,6 @@ fn now() -> String {
     let date = local.date_naive();
     let time = local.time();
     let datetime = date.and_time(time);
-    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_owned();
+    let now = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
     now
 }

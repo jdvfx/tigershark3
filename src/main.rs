@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use dotenv::dotenv;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::env;
