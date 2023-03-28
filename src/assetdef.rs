@@ -20,16 +20,13 @@ impl From<SqliteRow> for Asset {
 }
 
 #[allow(dead_code)]
+#[derive(Default)]
 pub enum Status {
+    #[default]
     NotSet = 0,
     Online = 1,
     Purge = 2,
     Deleted = 3,
-}
-impl Default for Status {
-    fn default() -> Self {
-        Status::NotSet
-    }
 }
 
 #[derive(sqlx::FromRow, Debug, Clone, Default)]
