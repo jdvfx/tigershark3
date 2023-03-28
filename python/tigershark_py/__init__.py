@@ -68,7 +68,7 @@ class TigerShark:
     # grab all the houdini UI parms and create
     # an asset dictionnary, later dumpped as json
     def build_asset(self):
-        asset_parms =  ["name","location","version","datapath"]
+        asset_parms =  ["name","location","datapath"]
         asset = {}
         for parm in asset_parms:
             asset[parm] = self.node.evalParm(parm)
@@ -119,6 +119,7 @@ class TigerShark:
         source = self.backup_hip()
         asset = self.build_asset()
         asset["source"]=source
+        # get dependencies list, stash in asset
         depends = self.get_depends()
         asset["depend"]=depends
 
