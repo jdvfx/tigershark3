@@ -5,56 +5,67 @@ use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 //
 
+// async fn asset_exists(connection: &mut PoolConnection<Sqlite>, asset: &Asset) -> bool {
+//     let sql = sqlx::query("SELECT * FROM assets WHERE name=? AND location=?")
+//         .bind(&asset.name)
+//         .bind(&asset.location)
+//         .fetch_one(connection)
+//         .await;
+//     match sql {
+//         Ok(_) => return true,
+//         Err(_) => return false,
+//     }
+// }
+//
+async fn create_asset(connection: &mut PoolConnection<Sqlite>, json: &AssetJson) -> bool {
+    let sql = sqlx::query("INSERT INTO assets ('name','location') VALUES (?,?);")
+        .bind(&json.name)
+        .bind(&json.location)
+        .execute(connection)
+        .await;
+    match sql {
+        Ok(_) => return true,
+        Err(_) => return false,
+    }
+}
+//
+pub async fn find_asset_id(
+    connection: &mut PoolConnection<Sqlite>,
+    json: &AssetJson,
+) -> Option<i64> {
+    let sql = sqlx::query("SELECT * FROM assets WHERE name=? AND location=?;")
+        .bind(&json.name)
+        .bind(&json.location)
+        .fetch_one(connection)
+        .await;
+    match sql {
+        Ok(sql) => {
+            let asset: Asset = sql.into();
+            Some(asset.asset_id)
+        }
+        Err(_) => None,
+    }
+}
+
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
-    // first, let's find out if the asset exists
-    println!(">>> asset id {}", json.asset_id);
+    // doesn't have asset_id, not been passed in the args?
     if json.asset_id == 0 {
-        create_version(connection, json).await
-    } else {
-        // asset_id doesn't exist, use name+location
-        let sql = sqlx::query("SELECT * FROM assets WHERE name=? AND location=?;")
-            .bind(&json.name)
-            .bind(&json.location)
-            .fetch_one(&mut connection)
-            .await;
-        if sql.is_err() {
-            // asset ID not found, create a new asset
-            let sql2 = sqlx::query("INSERT INTO assets ('name','location') VALUES (?,?);")
-                .bind(&json.name)
-                .bind(&json.location)
-                .execute(&mut connection)
-                .await;
-            match sql2 {
-                Ok(_sql2) => {
-                    // new asset created
-                    // let's find out its asset_id
-                    let sql3 = sqlx::query("SELECT * FROM assets WHERE name=? AND location=?;")
-                        .bind(&json.name)
-                        .bind(&json.location)
-                        .fetch_one(&mut connection)
-                        .await;
-                    match sql3 {
-                        Ok(s) => {
-                            // found the asset_id of the newly created asset
-                            let asset: Asset = s.into();
-                            json.asset_id = asset.asset_id;
-                            create_version(connection, json).await
-                        }
-                        Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
-                            "Couldn't find ID: {e:?}"
-                        )))),
-                    }
-                }
-                Err(e) => CliOutput(Err(TigerSharkError::DbError(format!(
-                    "Error creating Asset : {e:?}"
-                )))),
+        let asset_id = find_asset_id(&mut connection, &json).await;
+        if asset_id.is_none() {
+            create_asset(&mut connection, &json).await;
+        }
+        match find_asset_id(&mut connection, &json).await {
+            None => {
+                return CliOutput(Err(TigerSharkError::DbError(format!(
+                    "Error Finding Asset Version"
+                ))))
             }
-        } else {
-            let asset: Asset = sql.unwrap().into();
-            json.asset_id = asset.asset_id;
-            create_version(connection, json).await
+            Some(asset_id) => {
+                json.asset_id = asset_id;
+            }
         }
     }
+    create_version(connection, json).await
 }
 
 pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
@@ -70,7 +81,7 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
 
     let q = "INSERT INTO versions
             ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
-            VALUES (?,?,?,?,?,?,?,?);";
+            VALUES (?,?,?,?,?,?,?,?,?);";
     let sql = sqlx::query(q)
         .bind(json.asset_id)
         .bind(new_version)
@@ -79,6 +90,7 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         .bind(json.depend)
         .bind(0)
         .bind(Status::Online as u8)
+        .bind(now())
         .bind(now())
         .execute(&mut connection)
         .await;
