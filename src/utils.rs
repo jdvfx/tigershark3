@@ -3,29 +3,19 @@ use crate::errors::{CliOutput, TigerSharkError};
 use crate::parse_args::{Asset, AssetJson};
 use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
-//
 
-// async fn asset_exists(connection: &mut PoolConnection<Sqlite>, asset: &Asset) -> bool {
-//     let sql = sqlx::query("SELECT * FROM assets WHERE name=? AND location=?")
-//         .bind(&asset.name)
-//         .bind(&asset.location)
-//         .fetch_one(connection)
-//         .await;
-//     match sql {
-//         Ok(_) => return true,
-//         Err(_) => return false,
-//     }
-// }
-//
-async fn create_asset(connection: &mut PoolConnection<Sqlite>, json: &AssetJson) -> bool {
+async fn create_asset(
+    connection: &mut PoolConnection<Sqlite>,
+    json: &AssetJson,
+) -> Result<String, String> {
     let sql = sqlx::query("INSERT INTO assets ('name','location') VALUES (?,?);")
         .bind(&json.name)
         .bind(&json.location)
         .execute(connection)
         .await;
     match sql {
-        Ok(_) => return true,
-        Err(_) => return false,
+        Err(e) => Err(e.to_string()),
+        Ok(_) => Ok("".to_string()),
     }
 }
 //
@@ -40,7 +30,11 @@ pub async fn find_asset_id(
         .await;
     match sql {
         Ok(sql) => {
+            // into() does unwrap_or_default() and returns asset_id=0 when fail.
             let asset: Asset = sql.into();
+            if asset.asset_id == 0_i64 {
+                return None;
+            }
             Some(asset.asset_id)
         }
         Err(_) => None,
@@ -48,17 +42,24 @@ pub async fn find_asset_id(
 }
 
 pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson) -> CliOutput {
-    // doesn't have asset_id, not been passed in the args?
+    // doesn't have asset_id/not been passed in the assetJson
     if json.asset_id == 0 {
         let asset_id = find_asset_id(&mut connection, &json).await;
         if asset_id.is_none() {
-            create_asset(&mut connection, &json).await;
+            let c = create_asset(&mut connection, &json).await;
+            if c.is_err() {
+                return CliOutput(Err(TigerSharkError::DbError(format!(
+                    "Error Creating Asset {:?}",
+                    c
+                ))));
+            }
         }
+
         match find_asset_id(&mut connection, &json).await {
             None => {
-                return CliOutput(Err(TigerSharkError::DbError(format!(
-                    "Error Finding Asset Version"
-                ))))
+                return CliOutput(Err(TigerSharkError::DbError(
+                    "Error Finding Asset Version".to_string(),
+                )))
             }
             Some(asset_id) => {
                 json.asset_id = asset_id;
