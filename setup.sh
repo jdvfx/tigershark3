@@ -1,0 +1,53 @@
+#!/bin/bash
+ts_path_default="$HOME/tigershark"
+db_path_default="$HOME/tigershark_db"
+db_name_default="ts1"
+
+echo Tigershark install path
+echo [default] $ts_path_default
+read TS_PATH
+echo DB path
+echo [default] $db_path_default
+read DB_PATH
+echo DB name
+echo [default] $db_name_default
+read DB_NAME
+
+if [ -z "$TS_PATH" ]
+then
+	TS_PATH=$ts_path_default
+fi
+if [ -z "$DB_PATH" ]
+then
+	DB_PATH=$db_path_default
+fi
+if [ -z "$DB_NAME" ]
+then
+	DB_NAME=$db_name_default
+fi
+
+echo ts_path=$TS_PATH
+echo db_path=$DB_PATH
+echo db_name=$DB_NAME
+
+echo --------------------------------
+read -p "Do you want to proceed? (yes/no) " yn
+
+case $yn in 
+	yes ) echo . . . ;;
+	no ) echo exiting...;
+		exit;;
+	* ) echo invalid response;
+		exit 1;;
+esac
+
+mkdir -p $TS_PATH
+mkdir -p $DB_PATH
+cp -r * $TS_PATH
+echo $TS_PATH$'\n'$DB_PATH/$DB_NAME > ~/.tigershark_db_path
+sqlite3 $DB_PATH/$DB_NAME ".read db/schema.sql"
+
+echo install config saved in: ~/.tigershark_db_path
+echo DB created: $DB_PATH/$DB_NAME
+
+
