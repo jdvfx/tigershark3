@@ -34,22 +34,22 @@ find latest version of an asset
 
 # required Jason fields for each command
 
-insert
+insert<br>
 name && location || asset_id && datapath && source
 
-source
+source<br>
 name && a_location || a_asset_id && a_version || a_version_id
 
-delete
+delete<br>
 name && a_location || a_asset_id && a_version || a_version_id
 
-latest
+latest<br>
 a_name && a_location || a_asset_id
 
-approve
+approve<br>
 name && a_location || a_asset_id && a_version || a_version_id
 
-purge
+purge<br>
 // no Json required
 
 
