@@ -2,24 +2,63 @@
 
 Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD functions using SQLite3, Python3 (Houdini front-end) and Rust (back-end). Since it's CLI based, it can be used with any software, not just Houdini.
 
-- insert (create/update)
-- get_latest (latest version)
-- get_source (path of file that created the asset)
-- delete (tag for deletion, a separate tool does the actual deletion)
+# CLI Syntax
+
+tigershark3 -c {command} -a {asset}
+
+available commands:
+- insert : create new version (create if asset if )
+- latest : returns the latest version of the asset
+- source : returns the source file that created the current version
+- delete (mark version for deletion)
 - approve (approve asset version and dependencies)
+- purge : write text file listing all versions to delete
 
-syntax:<br>
+asset format
+- Json
+    {"name":"my_asset","location":"myasset_location"}
 
-> insert new asset<br>
+
+# Examples
+
+insert new asset
 ./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location"}'
 
-> update asset<br>
+update asset
 ./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location","datapath":"/data/myasset","source":"/sources/myasset_source"}'
 
-> find latest version of an asset<br>
+find latest version of an asset
 ./tigershark3 -c latest -a '{"name":"my_asset","location":"myasset_location"}'
 
-> 2 SQLite tables (assets/versions)
+
+
+# required Jason fields for each command
+
+insert
+name && location || asset_id && datapath && source
+
+source
+name && a_location || a_asset_id && a_version || a_version_id
+
+delete
+name && a_location || a_asset_id && a_version || a_version_id
+
+latest
+a_name && a_location || a_asset_id
+
+approve
+name && a_location || a_asset_id && a_version || a_version_id
+
+purge
+// no Json required
+
+
+
+
+
+# DB Storage Scheme (SQlite3)
+
+> 2 tables (assets/versions)
 
 ### Assets<br>
 asset_id	: i64<br>
