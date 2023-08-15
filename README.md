@@ -6,28 +6,28 @@ Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD 
 
 tigershark3 -c {command} -a {asset}
 
-available commands:
-- insert : create new version (create if asset if )
-- latest : returns the latest version of the asset
-- source : returns the source file that created the current version
-- delete (mark version for deletion)
-- approve (approve asset version and dependencies)
-- purge : write text file listing all versions to delete
+available commands:<br>
+- insert : create new version (create if asset if )<br>
+- latest : returns the latest version of the asset<br>
+- source : returns the source file that created the current version<br>
+- delete (mark version for deletion)<br>
+- approve (approve asset version and dependencies)<br>
+- purge : write text file listing all versions to delete<br>
 
-asset format
-- Json
+asset format<br>
+- Json<br>
     {"name":"my_asset","location":"myasset_location"}
 
 
 # Examples
 
-insert new asset
+insert new asset<br>
 ./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location"}'
 
-update asset
+update asset<br>
 ./tigershark3 -c insert -a '{"name":"my_asset","location":"myasset_location","datapath":"/data/myasset","source":"/sources/myasset_source"}'
 
-find latest version of an asset
+find latest version of an asset<br>
 ./tigershark3 -c latest -a '{"name":"my_asset","location":"myasset_location"}'
 
 
