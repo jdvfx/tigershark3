@@ -38,22 +38,19 @@ insert<br>
 name && location || asset_id && datapath && source
 
 source<br>
-name && a_location || a_asset_id && a_version || a_version_id
+name && location && version || asset_id && version || version_id
 
 delete<br>
-name && a_location || a_asset_id && a_version || a_version_id
+name && location || asset_id && version || version_id
 
 latest<br>
-a_name && a_location || a_asset_id
+name && location || asset_id
 
 approve<br>
-name && a_location || a_asset_id && a_version || a_version_id
+name && location || asset_id && version || version_id
 
 purge<br>
 // no Json required
-
-
-
 
 
 # DB Storage Scheme (SQlite3)
@@ -61,7 +58,7 @@ purge<br>
 > 2 tables (assets/versions)
 
 ### Assets<br>
-asset_id	: i64<br>
+asset_id	: i64<br>         ----
 name		: String<br>
 location	: String<br>
 
@@ -73,7 +70,7 @@ datapath	: String<br>
 depend		: String<br>
 approved	: i64<br>
 status		: i64<br>
-asset_id	: i64<br>
+asset_id	: i64<br>          ----
 ctime		: String<br>
 atime		: String<br>
 
