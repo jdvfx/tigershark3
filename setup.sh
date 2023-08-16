@@ -26,6 +26,9 @@ then
 	DB_NAME=$db_name_default
 fi
 
+# add the .db extension
+DB_NAME=$DB_NAME.db
+
 echo ts_path=$TS_PATH
 echo db_path=$DB_PATH
 echo db_name=$DB_NAME
