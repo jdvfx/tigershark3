@@ -16,9 +16,11 @@ build rust executable
 ```
 $cargo build --release
 ```
-setup Sqlite3 DB and executable (Tigershark path,DB path/name)<br>
-creates: $HOME/.tigershark_db_path<br>
-adds one line to .bashrc ($PYTHONPATH)<br>
+setup executable and Sqlite3 DB (Tigershark exec path,DB path/name)<br>
+
+adds two environment variables to .bashrc:<br>
+* $PYTHONPATH for Houdini, the tigershark python module<br>
+* $TS_DATABASE the Sqlite3 database path<br> 
 ```
 $bash setup.sh
 ```
