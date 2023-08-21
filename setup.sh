@@ -47,10 +47,8 @@ esac
 mkdir -p $TS_PATH
 mkdir -p $DB_PATH
 cp -r * $TS_PATH
-echo $TS_PATH > ~/.tigershark_db_path
 sqlite3 $DB_PATH/$DB_NAME ".read db/schema.sql"
 
-echo install config saved in: ~/.tigershark_db_path
 echo DB created: $DB_PATH/$DB_NAME
 echo TS_DATABASE_URL=sqlite:$DB_PATH/$DB_NAME > .env
 
