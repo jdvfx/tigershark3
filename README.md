@@ -2,6 +2,29 @@
 
 Tigershark3 is a CLI based Houdini asset version tracking tool with simple CRUD functions using SQLite3, Python3 (Houdini front-end) and Rust (back-end). Since it's CLI based, it can be used with any software, not just Houdini.
 
+# Dependencies
+
+- RUST: https://www.rust-lang.org/tools/install
+- SQLite3
+- Python3
+
+# SETUP
+
+# 1) build rust executable
+$cargo build --release
+
+# 2) setup Sqlite3 DB and executable (Tigershark path,DB path/name)
+# creates: $HOME/.tigershark_db_path
+# adds one line to .bashrc ($PYTHONPATH)
+$bash setup.sh
+
+
+
+
+
+
+
+
 # CLI Syntax
 
 tigershark3 -c {command} -a {asset}
@@ -73,5 +96,8 @@ status		: i64<br>
 asset_id	: i64<br>          ----
 ctime		: String<br>
 atime		: String<br>
+
+-----------------------------------------------
+
 
 
