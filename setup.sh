@@ -53,3 +53,6 @@ sqlite3 $DB_PATH/$DB_NAME ".read db/schema.sql"
 echo install config saved in: ~/.tigershark_db_path
 echo DB created: $DB_PATH/$DB_NAME
 echo DATABASE_URL=sqlite:$DB_PATH/$DB_NAME > .env
+
+echo TS_PATH added to .bashrc
+echo 'export PYTHONPATH=$PYTHONPATH:'$TS_PATH'/python' >> ~/.bashrc
