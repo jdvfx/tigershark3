@@ -1,5 +1,6 @@
 ##!/usr/bin/env python3
 import hou
+import re
 import os
 import json
 from subprocess import Popen, PIPE
@@ -44,11 +45,6 @@ class TigerShark:
         os.chmod(backupfile, S_IREAD|S_IRGRP|S_IROTH)
 
         return backupfile
-
-    # houdini - NOPE!
-    # def increment_version(self):
-    #     version = self.node.parm("version")
-    #     version.set(version.eval()+1)
 
     # call rust executable, pass command and asset
     # return tuple with (ExitCode,Output)
@@ -105,11 +101,15 @@ class TigerShark:
         asset = self.build_asset()
         # get latest version from DB and increment version on hda UI
         command = "latest"
+
         output = self.ts(command,asset)
         if output[0]==0:
-            v = output[1]
+            # all the cli outputs are string
+            # eg: the second element is '"12"'
+            v = re.sub('"','',output[1])
             if v.isdigit():
                 self.node.parm("version").set(int(v)+1)
+
         else:
             # if version not found, then it's v0 
             self.node.parm("version").set(1)
