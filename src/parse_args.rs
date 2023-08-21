@@ -1,4 +1,3 @@
-use core::fmt;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 
@@ -66,25 +65,6 @@ pub struct AssetJson {
     pub status: u8,
 }
 
-impl fmt::Display for AssetJson {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "asset_id:{},name:{},location:{},version_id:{},version:{},
-            source:{},datapath:{},depend:{},approved:{},status:{}",
-            self.asset_id,
-            self.name,
-            self.location,
-            self.version_id,
-            self.version,
-            self.source,
-            self.datapath,
-            self.depend,
-            self.approved,
-            self.status,
-        )
-    }
-}
 // create default empty values if missing
 impl From<JsonOption> for AssetJson {
     fn from(json_o: JsonOption) -> AssetJson {
@@ -144,7 +124,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     fn keys_err(command: &str, asset: AssetJson) -> CliOutput {
         CliOutput(Err(crate::errors::TigerSharkError::AssetKeysError(
             command.to_owned(),
-            format!("{}", asset),
+            format!("{:?}", asset),
         )))
     }
     // >>> COMMAND <<<

@@ -101,7 +101,8 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
         Ok(s) => {
             // return row_id which is version_id in this case
             let rowid = s.last_insert_rowid();
-            CliOutput(Ok(format!("{rowid:?}")))
+            // CliOutput(Ok(format!("{rowid:?}")))
+            CliOutput(Ok(rowid.to_string()))
         }
         Err(e) => CliOutput(Err(TigerSharkError::DbError(format!(
             "Error creating Asset Version : {e:?} {q}"
