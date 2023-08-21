@@ -16,7 +16,7 @@ use parse_args::CommandType;
 async fn main() {
     // get database_url from .env file
     dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = env::var("TS_DATABASE_URL").expect("DATABASE_URL must be set");
 
     let cli_output: CliOutput;
     // parse args
