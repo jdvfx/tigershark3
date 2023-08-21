@@ -54,5 +54,7 @@ echo install config saved in: ~/.tigershark_db_path
 echo DB created: $DB_PATH/$DB_NAME
 echo TS_DATABASE_URL=sqlite:$DB_PATH/$DB_NAME > .env
 
-echo TS_PATH added to .bashrc
+echo TS_PATH and TS_DATABASE added to .bashrc
 echo 'export PYTHONPATH=$PYTHONPATH:'$TS_PATH'/python' >> ~/.bashrc
+echo 'export TS_DATABASE=sqlite:'$DB_PATH/$DB_NAME >> ~/.bashrc
+
