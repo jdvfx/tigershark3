@@ -6,14 +6,14 @@ from subprocess import Popen, PIPE
 from datetime import datetime
 from stat import S_IREAD, S_IRGRP, S_IROTH
 
-# get tigershark executable
-target="debug"
-# target="release"
+from tigershark_py.tsexec import get_ts_exec
 
-# for now the Rust executable path is hard-coded...
-# will be added to a /tools/ dir
-pwd = "/home/bunker/projects/tigershark3/target/"
-ts_exe = pwd+target+"/tigershark3"
+# get tigershark executable
+ts_exe = get_ts_exec(__file__)
+if ts_exe is None:
+    print("Tigershark executable not found")
+    exit()
+
 
 class TigerShark:
 
