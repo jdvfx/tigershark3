@@ -43,7 +43,7 @@ class TigerShark:
         os.system(command)
         # set backup file to read only
         os.chmod(backupfile, S_IREAD|S_IRGRP|S_IROTH)
-
+        print(backupfile)
         return backupfile
 
     # call rust executable, pass command and asset
@@ -64,10 +64,11 @@ class TigerShark:
     # grab all the houdini UI parms and create
     # an asset dictionnary, later dumpped as json
     def build_asset(self):
-        asset_parms =  ["name","location","datapath"]
+        asset_parms =  ["name","location","datapath","version"]
         asset = {}
         for parm in asset_parms:
             asset[parm] = self.node.evalParm(parm)
+        print(">> " ,asset)
         return asset
    
     # Tigershark commands (CommandType enum)
@@ -130,6 +131,7 @@ class TigerShark:
     # tigershark -c source 
     def source(self):
         asset = self.build_asset()
+        print(f"\n{asset}\n")
         command = "source"
         return(self.ts(command,asset))
 
