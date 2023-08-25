@@ -7,6 +7,9 @@ Since it's cli based and using JSON, it can be used with any software, not just 
 **Dependencies**
 
 * Rust https://www.rust-lang.org/tools/install
+* build-essential
+    * Ubuntu/Debian: sudo apt install build-essential
+    * Fedora: sudo dnf group install "C Development Tools and Libraries"
 * SQLite3
 * Python3
 * Houdini19 (optional)
