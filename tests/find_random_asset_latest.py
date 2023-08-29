@@ -5,7 +5,7 @@ from typing import Optional
 from subprocess import Popen, PIPE
 
 thisdir = os.path.dirname(__file__)
-ts_exe = f"{thisdir}/target/debug/tigershark3"
+ts_exe = f"{thisdir}/../target/debug/tigershark3"
 
 def get_random_asset() -> Optional[str]:
     db = os.environ['TS_DATABASE_URL']

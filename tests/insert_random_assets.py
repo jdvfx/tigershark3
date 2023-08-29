@@ -6,7 +6,7 @@ import json
 from subprocess import Popen, PIPE
 
 thisdir = os.path.dirname(__file__)
-ts_exe = f"{thisdir}/target/debug/tigershark3"
+ts_exe = f"{thisdir}/../target/debug/tigershark3"
 
 def rand_name() -> str:
     fxnames = ["door", "window", "rock","car","dog","explosion","smoke","light","vol","large_splash",
@@ -60,6 +60,7 @@ for i in range(10):
 
         asset["datapath"] = f"{datapath}_v{j+1}"
         clioutput = ts(command,asset)
+        print(command,asset)
         print(clioutput)
         sleep = random.random()
         time.sleep(sleep)
