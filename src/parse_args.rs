@@ -31,6 +31,9 @@ pub struct Args {
     /// Json string representing the asset
     #[clap(short, long, value_parser)]
     pub asset: Option<String>,
+    /// file
+    #[clap(short, long, value_parser)]
+    pub file: Option<String>,
     /// extra args to some commands
     #[clap(short, long, value_parser)]
     pub extra_args: Option<String>,
@@ -97,6 +100,11 @@ pub fn get_args() -> Result<Command, CliOutput> {
             }
         }
     }
+
+    // >>> FILE ---
+    let file_str:Option<String> = args.file;
+    println!("file: {}",file_str);
+
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
     // get asset String from args and try to parse using struct above
