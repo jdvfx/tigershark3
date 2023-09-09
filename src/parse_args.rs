@@ -8,6 +8,7 @@ use crate::errors::CliOutput;
 pub enum CommandType {
     Insert,
     Source,
+    SourceFromFile,
     Delete,
     Latest,
     Approve,
@@ -102,8 +103,8 @@ pub fn get_args() -> Result<Command, CliOutput> {
     }
 
     // >>> FILE ---
-    let file_str:Option<String> = args.file;
-    println!("file: {}",file_str);
+    let file_str: Option<String> = args.file;
+    println!("file: {:?}", file_str);
 
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
@@ -125,6 +126,8 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let a_version_id = asset_option.version_id.is_some();
     let a_datapath = asset_option.datapath.is_some();
     let a_source = asset_option.source.is_some();
+    // check if file argument is passed (for Source)
+    let a_file = file_str.is_some();
 
     // unpack JsonOption into JsonString
     let asset: AssetJson = asset_option.into();
@@ -160,6 +163,14 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 _ => Err(keys_err("source", asset)),
             }
         }
+        CommandType::SourceFromFile => match a_file {
+            true => Ok(Command {
+                command: CommandType::SourceFromFile,
+                json: None,
+                extra_args: file_str,
+            }),
+            _ => Err(keys_err("source_from_file", asset)),
+        },
         CommandType::Delete => {
             match (a_name && a_location || a_asset_id) && a_version || a_version_id {
                 true => Ok(Command {
