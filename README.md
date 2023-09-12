@@ -62,7 +62,7 @@ asset format<br>
 ./tigershark3 -c source_from_file -f /data/projects/show/seq/shot/my_file.1234.bgeo.sc
 
 
-**commands that require Json fields**
+**commands that require Json fields (asset)**
 
 * insert<br>
 name && location || asset_id && datapath && source
