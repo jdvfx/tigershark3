@@ -8,7 +8,9 @@ mod assetdef;
 pub mod errors;
 pub mod utils;
 
+pub mod frame_num;
 pub mod parse_args;
+
 use errors::{exit_or_panic, CliOutput, TigerSharkError};
 use parse_args::CommandType;
 
@@ -39,9 +41,11 @@ async fn main() {
             match conn {
                 Ok(conn) => {
                     let json = args.json.unwrap_or_default();
+                    let file = args.file.unwrap_or_default();
                     cli_output = match args.command {
                         CommandType::Insert => utils::insert(conn, json).await,
                         CommandType::Source => utils::source(conn, json).await,
+                        CommandType::SourceFromFile => utils::source_from_file(conn, file).await,
                         CommandType::Delete => utils::delete(conn, json).await,
                         CommandType::Latest => utils::latest(conn, json).await,
                         CommandType::Approve => utils::approve(conn, json).await,

@@ -1,6 +1,8 @@
 use crate::assetdef::{Status, Version};
 use crate::errors::{CliOutput, TigerSharkError};
+use crate::frame_num::find_replace_frame_num;
 use crate::parse_args::{Asset, AssetJson};
+
 use chrono::prelude::*;
 use sqlx::{pool::PoolConnection, Acquire, Sqlite};
 
@@ -148,6 +150,33 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     let sql = sqlx::query(q)
         .bind(json.asset_id)
         .bind(json.version)
+        .fetch_one(&mut connection)
+        .await;
+
+    match sql {
+        Ok(s) => {
+            let version: &Version = &(&s).into();
+            let source = &version.source;
+            CliOutput(Ok(format!("source : {source}")))
+        }
+        Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
+            "Source not found: {e:?} {q}"
+        )))),
+    }
+}
+
+pub async fn source_from_file(mut connection: PoolConnection<Sqlite>, file: String) -> CliOutput {
+    let generic_frame = find_replace_frame_num(&file);
+    if generic_frame.is_err() {
+        return CliOutput(Err(TigerSharkError::FilePathError(
+            "file argument parsing Error".to_string(),
+        )));
+    }
+    let generic_frame = generic_frame.unwrap_or("".to_string());
+
+    let q = "SELECT source FROM versions WHERE datapath=? ;";
+    let sql = sqlx::query(q)
+        .bind(generic_frame)
         .fetch_one(&mut connection)
         .await;
 

@@ -6,6 +6,8 @@ pub struct CliOutput(pub Result<String, TigerSharkError>);
 
 #[derive(Error, Debug)]
 pub enum TigerSharkError {
+    #[error("FilePath Error: `{0}`")]
+    FilePathError(String),
     #[error("CLI Error: `{0}`")]
     CliError(String),
     #[error("DB Error: `{0}`")]

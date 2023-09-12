@@ -20,6 +20,7 @@ pub struct Command {
     pub command: CommandType,
     pub json: Option<AssetJson>,
     pub extra_args: Option<String>,
+    pub file: Option<String>,
 }
 
 /// Parse Command and Asset(json) arguments
@@ -92,7 +93,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
     let args = Args::parse();
     // check that asset exists for all commands except Purge
     match args.command {
-        CommandType::Purge => (),
+        CommandType::Purge | CommandType::SourceFromFile => (),
         _ => {
             if args.asset.is_none() {
                 return Err(CliOutput(Err(crate::errors::TigerSharkError::CliError(
@@ -149,6 +150,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
                     command: CommandType::Insert,
                     json: Some(asset),
                     extra_args: None,
+                    file: None,
                 }),
                 _ => Err(keys_err("insert", asset)),
             }
@@ -159,6 +161,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
                     command: CommandType::Source,
                     json: Some(asset),
                     extra_args: None,
+                    file: None,
                 }),
                 _ => Err(keys_err("source", asset)),
             }
@@ -167,7 +170,8 @@ pub fn get_args() -> Result<Command, CliOutput> {
             true => Ok(Command {
                 command: CommandType::SourceFromFile,
                 json: None,
-                extra_args: file_str,
+                extra_args: None,
+                file: file_str,
             }),
             _ => Err(keys_err("source_from_file", asset)),
         },
@@ -177,6 +181,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
                     command: CommandType::Delete,
                     json: Some(asset),
                     extra_args: None,
+                    file: None,
                 }),
                 _ => Err(keys_err("delete", asset)),
             }
@@ -186,6 +191,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
                 command: CommandType::Latest,
                 json: Some(asset),
                 extra_args: None,
+                file: None,
             }),
             _ => Err(keys_err("latest", asset)),
         },
@@ -195,6 +201,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
                     command: CommandType::Approve,
                     json: Some(asset),
                     extra_args: None,
+                    file: None,
                 }),
                 _ => Err(keys_err("approve", asset)),
             }
@@ -204,6 +211,7 @@ pub fn get_args() -> Result<Command, CliOutput> {
             command: CommandType::Purge,
             json: None,
             extra_args: None,
+            file: None,
         }),
     }
 }
