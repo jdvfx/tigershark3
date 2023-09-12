@@ -40,6 +40,7 @@ available commands:<br>
 * delete (mark version for deletion)<br>
 * approve (approve asset version and dependencies)<br>
 * purge : write text file listing all versions to delete<br>
+* source_from_file : returns the source file that created the current version<br>
 
 asset format<br>
 * Json<br>
@@ -57,9 +58,11 @@ asset format<br>
 * find latest version of an asset<br>
 ./tigershark3 -c latest -a '{"name":"my_asset","location":"myasset_location"}'
 
+* find source file from file path<br>
+./tigershark3 -c source_from_file -f /data/projects/show/seq/shot/my_file.1234.bgeo.sc
 
 
-**required Jason fields for each command**
+**commands that require Json fields**
 
 * insert<br>
 name && location || asset_id && datapath && source
@@ -76,8 +79,13 @@ name && location || asset_id
 * approve<br>
 name && location || asset_id && version || version_id
 
+**commands that require different arguments**
+
 * purge<br>
-// no Json required
+// no args required
+
+* source_from_file<br>
+file
 
 
 ### DB Storage Scheme (SQlite3)
