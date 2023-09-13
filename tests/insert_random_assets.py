@@ -1,12 +1,15 @@
 import time
 import string
 import random
-import os
 import json
+from pathlib import Path
 from subprocess import Popen, PIPE
 
-thisdir = os.path.dirname(__file__)
-ts_exe = f"{thisdir}/../target/debug/tigershark3"
+parentdir = Path().resolve().parent
+
+ts_exe = f"{parentdir}/target/debug/tigershark3"
+print(f"> {ts_exe}")
+
 
 def rand_name() -> str:
     fxnames = ["door", "window", "rock","car","dog","explosion","smoke","light","vol","large_splash",
@@ -20,6 +23,7 @@ def rand_name() -> str:
 
 def build_asset() -> dict:
     n = rand_name()
+
     asset = {
             "name":f"{n}",
             "location":f"{n}_loc",
@@ -58,7 +62,10 @@ for i in range(10):
     datapath = asset["datapath"]
     for j in range(ri):
 
-        asset["datapath"] = f"{datapath}_v{j+1}"
+        exts = ['bgeo','bgeo.sc','vdb','rat','pic','exr']
+        ext = random.choice(exts)
+
+        asset["datapath"] = f"{datapath}_v{j+1}.####.{ext}"
         clioutput = ts(command,asset)
         print(command,asset)
         print(clioutput)
