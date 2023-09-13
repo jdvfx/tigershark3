@@ -50,9 +50,11 @@ cp -r * $TS_PATH
 sqlite3 $DB_PATH/$DB_NAME ".read db/schema.sql"
 
 echo DB created: $DB_PATH/$DB_NAME
+
 echo TS_DATABASE_URL=$DB_PATH/$DB_NAME > .env
 
 echo TS_PATH and TS_DATABASE added to .bashrc
 echo 'export PYTHONPATH=$PYTHONPATH:'$TS_PATH'/python' >> ~/.bashrc
 echo 'export TS_DATABASE_URL='$DB_PATH'/'$DB_NAME >> ~/.bashrc
+echo 'export TS_PATH='$TS_PATH >> ~/.bashrc
 
