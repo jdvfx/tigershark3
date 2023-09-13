@@ -71,7 +71,10 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     create_version(connection, json).await
 }
 
-pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJson) -> CliOutput {
+pub async fn create_version(
+    mut connection: PoolConnection<Sqlite>,
+    mut json: AssetJson,
+) -> CliOutput {
     // get last version
     let last_version: i64 = latest_version(&mut connection, json.asset_id)
         .await
@@ -82,6 +85,18 @@ pub async fn create_version(mut connection: PoolConnection<Sqlite>, json: AssetJ
     // add access date - last time the file got read (that can be updated every few days?)
     // don't want to update access date every single time it's accessed - too much for DB
 
+    // remove frame number and replace with ####
+    let file = &json.datapath;
+    let generic_frame = find_replace_frame_num(&file);
+    if generic_frame.is_err() {
+        return CliOutput(Err(TigerSharkError::FilePathError(
+            "file argument parsing Error".to_string(),
+        )));
+    }
+    let generic_frame = generic_frame.unwrap_or("".to_string());
+    json.datapath = generic_frame;
+    //
+    //
     let q = "INSERT INTO versions
             ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
             VALUES (?,?,?,?,?,?,?,?,?);";
@@ -184,7 +199,7 @@ pub async fn source_from_file(mut connection: PoolConnection<Sqlite>, file: Stri
         Ok(s) => {
             let version: &Version = &(&s).into();
             let source = &version.source;
-            CliOutput(Ok(format!("source : {source}")))
+            CliOutput(Ok(format!("{source}")))
         }
         Err(e) => CliOutput(Err(TigerSharkError::NotFound(format!(
             "Source not found: {e:?} {q}"

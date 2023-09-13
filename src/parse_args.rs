@@ -105,7 +105,6 @@ pub fn get_args() -> Result<Command, CliOutput> {
 
     // >>> FILE ---
     let file_str: Option<String> = args.file;
-    println!("file: {:?}", file_str);
 
     // >>> ASSET ---
     // Asset is defined in assetdef.rs
