@@ -1,11 +1,12 @@
 import os
 import random
 import json
+from pathlib import Path
 from typing import Optional
 from subprocess import Popen, PIPE
 
-thisdir = os.path.dirname(__file__)
-ts_exe = f"{thisdir}/../target/debug/tigershark3"
+parentdir = Path().resolve().parent
+ts_exe = f"{parentdir}/target/debug/tigershark3"
 
 def get_random_asset() -> Optional[str]:
     db = os.environ['TS_DATABASE_URL']

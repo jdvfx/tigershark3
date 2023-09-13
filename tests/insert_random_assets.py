@@ -6,10 +6,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 parentdir = Path().resolve().parent
-
 ts_exe = f"{parentdir}/target/debug/tigershark3"
-print(f"> {ts_exe}")
-
 
 def rand_name() -> str:
     fxnames = ["door", "window", "rock","car","dog","explosion","smoke","light","vol","large_splash",
