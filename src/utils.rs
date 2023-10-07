@@ -86,15 +86,7 @@ pub async fn create_version(
     // don't want to update access date every single time it's accessed - too much for DB
 
     // remove frame number and replace with ####
-    let file = &json.datapath;
-    let generic_frame = find_replace_frame_num(&file);
-    if generic_frame.is_err() {
-        return CliOutput(Err(TigerSharkError::FilePathError(
-            "file argument parsing Error".to_string(),
-        )));
-    }
-    let generic_frame = generic_frame.unwrap_or("".to_string());
-    json.datapath = generic_frame;
+    json.datapath = find_replace_frame_num(&json.datapath);
     //
     //
     let q = "INSERT INTO versions
@@ -181,17 +173,11 @@ pub async fn source(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
 }
 
 pub async fn source_from_file(mut connection: PoolConnection<Sqlite>, file: String) -> CliOutput {
-    let generic_frame = find_replace_frame_num(&file);
-    if generic_frame.is_err() {
-        return CliOutput(Err(TigerSharkError::FilePathError(
-            "file argument parsing Error".to_string(),
-        )));
-    }
-    let generic_frame = generic_frame.unwrap_or("".to_string());
+    let datapath = find_replace_frame_num(&file);
 
     let q = "SELECT source FROM versions WHERE datapath=? ;";
     let sql = sqlx::query(q)
-        .bind(generic_frame)
+        .bind(datapath)
         .fetch_one(&mut connection)
         .await;
 
