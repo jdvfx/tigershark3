@@ -1,3 +1,6 @@
 1 - insert
 datapath and source should not be optional
 
+2 - update atime each time a node is updating/creating a cache
+look for all the connected/ref nodes and update their atime
+
