@@ -71,6 +71,23 @@ pub async fn insert(mut connection: PoolConnection<Sqlite>, mut json: AssetJson)
     create_version(connection, json).await
 }
 
+pub async fn update_atime(
+    mut connection: PoolConnection<Sqlite>,
+    depend: &str,
+){
+    // not the cleanest way of adding an array, but that works
+    let q = format!("UPDATE versions
+             SET atime = ?
+             WHERE version_id IN ({});",depend);
+    let sql = sqlx::query(&q)
+        .bind(now())
+        .execute(&mut connection)
+        .await;
+    // for now we ignore the sql result
+    // if the atime is not updated we should log that.
+    //
+}
+
 pub async fn create_version(
     mut connection: PoolConnection<Sqlite>,
     mut json: AssetJson,
@@ -82,12 +99,8 @@ pub async fn create_version(
     // ignore error and create v1
     let new_version: i64 = last_version + 1_i64;
 
-    // add access date - last time the file got read (that can be updated every few days?)
-    // don't want to update access date every single time it's accessed - too much for DB
-
     // remove frame number and replace with ####
     json.datapath = find_replace_frame_num(&json.datapath);
-    //
     //
     let q = "INSERT INTO versions
             ('asset_id','version','source','datapath','depend','approved','status','ctime','atime')
@@ -97,7 +110,7 @@ pub async fn create_version(
         .bind(new_version)
         .bind(json.source)
         .bind(json.datapath)
-        .bind(json.depend)
+        .bind(&json.depend)
         .bind(0)
         .bind(Status::Online as u8)
         .bind(now())
@@ -105,7 +118,10 @@ pub async fn create_version(
         .execute(&mut connection)
         .await;
 
-    // let sql = sqlx::query(q).execute(&mut connection).await;
+    // really need to pass the connection as an Rc smart pointer...
+    // update all dependencies access time 
+    update_atime(connection,&json.depend).await;
+
     match sql {
         Ok(s) => {
             // return row_id which is version_id in this case
@@ -117,6 +133,7 @@ pub async fn create_version(
             "Error creating Asset Version : {e:?} {q}"
         )))),
     }
+
 }
 
 pub async fn latest_version(
