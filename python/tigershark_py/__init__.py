@@ -126,6 +126,14 @@ class TigerShark:
 
         command = "insert"
         output = self.ts(command,asset)
+
+        try:
+            # the output of tigershark exec should be int for this?
+            # if not, at least don't have a line return before.
+            version_id = int(re.sub("[^0-9]", "",output[1]))
+            self.node.parm("version_id").set(version_id)
+        except Exception:
+            pass
         return output
 
     # tigershark -c source 
